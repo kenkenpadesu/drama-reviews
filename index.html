@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <base target="_top">
+    <title>けんけんぱのドラマレビュー</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --bg-color: #0f0f0f;
+        --card-bg-color: #1a1a1a;
+        --primary-color: #ffffff;
+        --accent-color: #ffc107;
+        --text-color: #b0b0b0;
+        --light-text-color: #707070;
+      }
+
+      body {
+        font-family: 'Noto Sans JP', 'Roboto', sans-serif;
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        color: var(--text-color);
+        overflow-x: hidden;
+      }
+
+      .header {
+        background-color: var(--card-bg-color);
+        color: var(--primary-color);
+        text-align: center;
+        padding: 3rem 1rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        position: relative;
+        z-index: 2;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 3rem;
+        letter-spacing: 0.1rem;
+        font-weight: 700;
+        color: var(--accent-color);
+      }
+
+      .header p {
+        margin-top: 0.5rem;
+        font-size: 1.1rem;
+        opacity: 0.8;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+      }
+
+      .card {
+        background-color: var(--card-bg-color);
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        max-width: 900px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 16px 32px rgba(0, 0, 0, 0.5);
+      }
+
+      .card-image-container {
+        height: 600px;
+        width: calc(600px / 7 * 5);
+        flex-shrink: 0;
+        position: relative;
+        background-color: #111;
+      }
+
+      .card-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .card-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        background-color: #222;
+        color: #444;
+      }
+
+      .card-content {
+        padding: 2rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card-title {
+        font-size: 2rem;
+        margin: 0 0 0.5rem 0;
+        color: var(--primary-color);
+        font-weight: 700;
+      }
+
+      .card-meta {
+        font-size: 0.9rem;
+        color: var(--light-text-color);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .card-summary {
+        font-size: 1rem;
+        margin: 0 0 1rem 0;
+      }
+
+      .card-details {
+        margin-bottom: 1rem;
+      }
+
+      .card-details p {
+        margin: 0.25rem 0;
+        font-size: 0.95rem;
+      }
+
+      .card-rating {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+        font-size: 1.5rem;
+        color: var(--accent-color);
+      }
+
+      .rating-value {
+        font-size: 1rem;
+        color: var(--text-color);
+        margin-left: 0.5rem;
+      }
+
+      .card-comment {
+        margin-top: 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 1.5rem;
+      }
+
+      .card-comment h3 {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        margin-top: 0;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 2rem;
+        background-color: var(--card-bg-color);
+        color: var(--light-text-color);
+        margin-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      @media (max-width: 768px) {
+        .header h1 { font-size: 2.2rem; }
+        .container { gap: 1.5rem; }
+        .card { flex-direction: column; max-width: 100%; }
+        .card-image-container { height: 250px; width: 100%; }
+        .card-content { padding: 1.5rem; }
+        .card-title { font-size: 1.6rem; }
+        .card-summary, .card-details p { font-size: 1rem; }
+      }
+
+      @media (max-width: 480px) {
+        .filter-overlay { width: 100%; }
+      }
+
+      .filter-button {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: var(--accent-color);
+        color: var(--bg-color);
+        border: none;
+        padding: 0.75rem 1.5rem;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        font-family: 'Noto Sans JP', sans-serif;
+      }
+
+      .filter-button:hover {
+        background-color: #ffca2c;
+        transform: translateY(-3px);
+      }
+
+      .filter-overlay {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 350px;
+        height: 100vh;
+        background-color: var(--card-bg-color);
+        box-shadow: -8px 0 20px rgba(0, 0, 0, 0.6);
+        z-index: 999;
+        transform: translateX(100%);
+        transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+        padding: 3rem 2rem;
+        overflow-y: auto;
+      }
+
+      .filter-overlay.open { transform: translateX(0); }
+
+      .filter-section { margin-bottom: 2.5rem; }
+
+      .filter-section-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+      }
+
+      .filter-options, .sort-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .filter-options label {
+        display: flex;
+        align-items: center;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: color 0.3s ease;
+      }
+
+      .filter-options label:hover { color: var(--primary-color); }
+
+      .filter-options input[type="checkbox"] {
+        margin-right: 0.75rem;
+        accent-color: var(--accent-color);
+        width: 1.2em;
+        height: 1.2em;
+      }
+
+      .sort-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      .sort-button {
+        background-color: transparent;
+        border: 1px solid var(--accent-color);
+        color: var(--accent-color);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: bold;
+        font-family: 'Noto Sans JP', sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+      }
+
+      .sort-button:hover {
+        background-color: var(--accent-color);
+        color: var(--card-bg-color);
+        transform: translateY(-3px);
+      }
+
+      .no-results {
+        text-align: center;
+        width: 100%;
+        margin-top: 4rem;
+        font-size: 1.2rem;
+        color: var(--light-text-color);
+      }
+
+      .rating-stars {
+        color: var(--accent-color);
+        letter-spacing: 0.1rem;
+      }
+
+      .loading {
+        text-align: center;
+        width: 100%;
+        padding: 4rem 0;
+        color: var(--light-text-color);
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,193,7,0.2);
+        border-top-color: var(--accent-color);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 1rem;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <header class="header">
+      <h1>けんけんぱのドラマレビュー</h1>
+      <p>私の個人的な感想と評価を記録する場所です。</p>
+    </header>
+
+    <button id="filter-button" class="filter-button">フィルター</button>
+
+    <div id="filter-overlay" class="filter-overlay">
+      <div class="filter-section">
+        <div class="filter-section-title">並び替え</div>
+        <div class="sort-buttons">
+          <button class="sort-button" data-sort="year-desc">年代: 新しい順</button>
+          <button class="sort-button" data-sort="year-asc">年代: 古い順</button>
+          <button class="sort-button" data-sort="title-asc">タイトル: あいうえお順</button>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-section-title">国で絞り込み</div>
+        <div class="filter-options" id="country-filter-options">
+          <label><input type="checkbox" value="all" checked> すべての国</label>
+          <label><input type="checkbox" value="日本"> 日本</label>
+          <label><input type="checkbox" value="韓国"> 韓国</label>
+          <label><input type="checkbox" value="アメリカ"> アメリカ</label>
+          <label><input type="checkbox" value="その他"> その他</label>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-section-title">点数で絞り込み</div>
+        <div class="filter-options" id="rating-filter-options">
+          <label><input type="checkbox" value="all" checked> すべての点数</label>
+          <label><input type="checkbox" value="5"> 5 ★</label>
+          <label><input type="checkbox" value="4"> 4 ★</label>
+          <label><input type="checkbox" value="3"> 3 ★</label>
+          <label><input type="checkbox" value="2"> 2 ★</label>
+          <label><input type="checkbox" value="1"> 1 ★</label>
+        </div>
+      </div>
+      <div class="filter-section">
+        <div class="filter-section-title">年代で絞り込み</div>
+        <div class="filter-options" id="decade-filter-options">
+          <label><input type="checkbox" value="all" checked> すべての年代</label>
+          <label><input type="checkbox" value="2020"> 2020年代</label>
+          <label><input type="checkbox" value="2010"> 2010年代</label>
+          <label><input type="checkbox" value="2000"> 2000年代</label>
+          <label><input type="checkbox" value="その他"> その他</label>
+        </div>
+      </div>
+    </div>
+
+    <main class="container" id="container">
+      <div class="loading">
+        <div class="spinner"></div>
+        データを読み込み中...
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; <span id="year"></span> けんけんぱのドラマレビュー. All rights reserved.</p>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS73DX9q8q6qFDlwKlIARecBXcy63VotnvQg4uOI_kqGLDNlkaWzg-6ibgOMoDvSjIy2j4lJVbOIeW5/pub?gid=0&single=true&output=csv';
+
+      // CSVの列順（スプレッドシートのA列から順番に）
+      const COLS = {
+        title:   0,  // A: ドラマのタイトル
+        country: 1,  // B: 国
+        summary: 2,  // C: 簡単な内容
+        genre:   3,  // D: ジャンル
+        cast:    4,  // E: 出演者
+        theme:   5,  // F: 主題歌
+        station: 6,  // G: 放送局
+        year:    7,  // H: 放送された年
+        day:     8,  // I: 放送日・時間
+        rating:  9,  // J: 点数（5段階）
+        review:  10, // K: 簡単な感想
+        image:   11  // L: 画像URL
+      };
+
+      let allCards = [];
+
+      // CSVパーサー（ダブルクォート対応）
+      function parseCSV(text) {
+        const lines = text.trim().split('\n');
+        const rows = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cols = splitLine(lines[i]);
+          if (!cols[COLS.title] || cols[COLS.title].trim() === '') continue;
+          rows.push(cols);
+        }
+        return rows;
+      }
+
+      function splitLine(line) {
+        const result = [];
+        let cur = '', inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const c = line[i];
+          if (c === '"') {
+            if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+            else inQ = !inQ;
+          } else if (c === ',' && !inQ) {
+            result.push(cur.trim());
+            cur = '';
+          } else {
+            cur += c;
+          }
+        }
+        result.push(cur.trim());
+        return result;
+      }
+
+      function renderStars(rating) {
+        let html = '';
+        for (let i = 0; i < 5; i++) {
+          html += i < rating ? '★' : '☆';
+        }
+        return html;
+      }
+
+      function getDecade(yearStr) {
+        const y = parseInt(yearStr);
+        if (y >= 2020 && y <= 2029) return '2020';
+        if (y >= 2010 && y <= 2019) return '2010';
+        if (y >= 2000 && y <= 2009) return '2000';
+        return 'その他';
+      }
+
+      function createCard(row) {
+        const title   = row[COLS.title]   || '';
+        const country = row[COLS.country] || '';
+        const summary = row[COLS.summary] || '';
+        const genre   = row[COLS.genre]   || '';
+        const cast    = row[COLS.cast]    || '';
+        const theme   = row[COLS.theme]   || '';
+        const station = row[COLS.station] || '';
+        const year    = row[COLS.year]    || '';
+        const day     = row[COLS.day]     || '';
+        const ratingRaw = parseFloat(row[COLS.rating]) || 0;
+        const rating  = Math.round(ratingRaw);
+        const review  = row[COLS.review]  || '';
+        const imgUrl  = row[COLS.image]   || '';
+        const decade  = getDecade(year);
+        const yearNum = parseInt(year) || 0;
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.country = country;
+        card.dataset.rating  = rating;
+        card.dataset.year    = yearNum;
+        card.dataset.decade  = decade;
+        card.dataset.titleJp = title;
+
+        const imgHtml = imgUrl
+          ? `<img src="${escHtml(imgUrl)}" alt="${escHtml(title)}" class="card-image" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'>🎬</div>'">`
+          : `<div class="card-image-placeholder">🎬</div>`;
+
+        card.innerHTML = `
+          <div class="card-image-container">${imgHtml}</div>
+          <div class="card-content">
+            <div>
+              <h2 class="card-title">${escHtml(title)}</h2>
+              <div class="card-meta">
+                <span>国: ${escHtml(country)}</span>
+                <span>放送局: ${escHtml(station)}</span>
+              </div>
+              <p class="card-summary">${escHtml(summary)}</p>
+              <div class="card-details">
+                ${genre   ? `<p><strong>ジャンル:</strong> ${escHtml(genre)}</p>` : ''}
+                ${cast    ? `<p><strong>出演者:</strong> ${escHtml(cast)}</p>` : ''}
+                ${theme   ? `<p><strong>主題歌:</strong> ${escHtml(theme)}</p>` : ''}
+                ${(year || day) ? `<p><strong>放送:</strong> ${escHtml(year)} / ${escHtml(day)}</p>` : ''}
+              </div>
+            </div>
+            <div class="card-bottom">
+              <div class="card-rating">
+                <span class="rating-stars">${renderStars(rating)}</span>
+                <span class="rating-value">${ratingRaw} / 5</span>
+              </div>
+              ${review ? `
+              <div class="card-comment">
+                <h3>感想</h3>
+                <p>${escHtml(review)}</p>
+              </div>` : ''}
+            </div>
+          </div>
+        `;
+        return card;
+      }
+
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      function applyFilters() {
+        const selCountries = [...document.querySelectorAll('#country-filter-options input:checked')]
+          .map(cb => cb.value).filter(v => v !== 'all');
+        const selRatings = [...document.querySelectorAll('#rating-filter-options input:checked')]
+          .map(cb => parseFloat(cb.value)).filter(v => !isNaN(v));
+        const selDecades = [...document.querySelectorAll('#decade-filter-options input:checked')]
+          .map(cb => cb.value).filter(v => v !== 'all');
+
+        let anyVisible = false;
+        allCards.forEach(card => {
+          const c = card.dataset.country;
+          const finalCountry = ['日本','韓国','アメリカ'].includes(c) ? c : 'その他';
+          const countryOk = selCountries.length === 0 || selCountries.includes(finalCountry);
+          const ratingOk  = selRatings.length  === 0 || selRatings.includes(parseFloat(card.dataset.rating));
+          const decadeOk  = selDecades.length  === 0 || selDecades.includes(card.dataset.decade);
+
+          const show = countryOk && ratingOk && decadeOk;
+          card.style.display = show ? 'flex' : 'none';
+          if (show) anyVisible = true;
+        });
+
+        let noResult = document.getElementById('no-results');
+        if (!anyVisible) {
+          if (!noResult) {
+            noResult = document.createElement('p');
+            noResult.id = 'no-results';
+            noResult.className = 'no-results';
+            noResult.textContent = '条件に合うドラマが見つかりませんでした。';
+            container.appendChild(noResult);
+          }
+        } else if (noResult) {
+          noResult.remove();
+        }
+      }
+
+      function sortCards(sortType) {
+        const visible = allCards.filter(c => c.style.display !== 'none');
+        switch (sortType) {
+          case 'year-desc': visible.sort((a,b) => parseInt(b.dataset.year) - parseInt(a.dataset.year)); break;
+          case 'year-asc':  visible.sort((a,b) => parseInt(a.dataset.year) - parseInt(b.dataset.year)); break;
+          case 'title-asc': visible.sort((a,b) => a.dataset.titleJp.localeCompare(b.dataset.titleJp,'ja')); break;
+        }
+        visible.forEach(c => container.appendChild(c));
+      }
+
+      function setupCheckboxGroup(groupEl) {
+        const allCb = groupEl.querySelector('input[value="all"]');
+        groupEl.addEventListener('change', e => {
+          if (e.target.value === 'all') {
+            groupEl.querySelectorAll('input:not([value="all"])').forEach(cb => cb.checked = false);
+          } else {
+            allCb.checked = false;
+          }
+          if (groupEl.querySelectorAll('input:checked').length === 0) allCb.checked = true;
+          applyFilters();
+        });
+      }
+
+      // イベント設定
+      const container = document.getElementById('container');
+
+      setupCheckboxGroup(document.getElementById('country-filter-options'));
+      setupCheckboxGroup(document.getElementById('rating-filter-options'));
+      setupCheckboxGroup(document.getElementById('decade-filter-options'));
+
+      document.querySelectorAll('.sort-button').forEach(btn => {
+        btn.addEventListener('click', () => sortCards(btn.dataset.sort));
+      });
+
+      document.getElementById('filter-button').addEventListener('click', () => {
+        document.getElementById('filter-overlay').classList.toggle('open');
+      });
+
+      // データ読み込み
+      (async () => {
+        try {
+          const res = await fetch(CSV_URL);
+          const text = await res.text();
+          const rows = parseCSV(text);
+
+          container.innerHTML = '';
+
+          if (rows.length === 0) {
+            container.innerHTML = '<p class="no-results">レビューデータが見つかりませんでした。スプレッドシートにデータがあるか確認してください。</p>';
+            return;
+          }
+
+          rows.forEach(row => {
+            const card = createCard(row);
+            container.appendChild(card);
+            allCards.push(card);
+          });
+
+          applyFilters();
+        } catch (e) {
+          container.innerHTML = '<p class="no-results">データの読み込みに失敗しました。しばらくしてから再読み込みしてください。</p>';
+        }
+      })();
+    </script>
+  </body>
+</html>

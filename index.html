@@ -112,19 +112,28 @@ body {
 }
 .filter-overlay.open { transform: translateX(0); }
 .filter-close {
-  position: absolute;
-  top: 1.25rem; right: 1.25rem;
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.1);
-  color: var(--text-sub);
-  width: 32px; height: 32px;
-  border-radius: 50%;
+  position: sticky;
+  top: 0;
+  display: block;
+  width: 100%;
+  background: #1e1e1e;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  color: var(--gold);
+  padding: 1rem 1.5rem;
   cursor: pointer;
-  font-size: 16px;
-  display: flex; align-items: center; justify-content: center;
-  transition: border-color 0.2s, color 0.2s;
+  font-size: 15px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  text-align: left;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  margin-left: -2rem;
+  margin-right: -2rem;
+  width: calc(100% + 4rem);
+  transition: background 0.2s;
 }
-.filter-close:hover { border-color: var(--gold); color: var(--gold); }
+.filter-close:hover { background: #2a2a2a; }
 .filter-section { margin-bottom: 2rem; }
 .filter-section-title {
   font-size: 10px;
@@ -274,7 +283,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <button id="filter-button" class="filter-button">フィルター</button>
 
 <div id="filter-overlay" class="filter-overlay">
-  <button class="filter-close" id="filter-close">✕</button>
+  <button class="filter-close" id="filter-close">✕　閉じる</button>
   <div class="filter-section">
     <div class="filter-section-title">並び替え</div>
     <div class="sort-buttons">

@@ -104,6 +104,126 @@ body {
   letter-spacing: 0.04em;
 }
 .filter-button:hover { background: #dfc06a; transform: translateY(-2px); }
+.admin-button {
+  position: fixed;
+  top: 20px; right: 130px;
+  background: transparent;
+  color: #555;
+  border: 1px solid #333;
+  padding: 0.7rem 1.4rem;
+  font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  border-radius: 50px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s;
+  letter-spacing: 0.04em;
+}
+.admin-button:hover { border-color: var(--gold); color: var(--gold); }
+
+/* モーダル */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+.modal-close:hover { color: var(--text); }
+.form-group { margin-bottom: 1rem; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  color: #666;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: #1e1e1e;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--gold);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select option { background: #1e1e1e; }
+.form-row { display: flex; gap: 1rem; }
+.form-row .form-group { flex: 1; }
+.form-submit {
+  width: 100%;
+  background: var(--gold);
+  color: #0a0a0a;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 6px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background 0.2s;
+}
+.form-submit:hover { background: #dfc06a; }
+.form-submit:disabled { opacity: 0.5; pointer-events: none; }
+.form-msg { font-size: 13px; text-align: center; margin-top: 0.75rem; }
+.form-msg.success { color: #6db87a; }
+.form-msg.error { color: #e05a7a; }
+.pw-screen { text-align: center; padding: 1rem 0; }
+.pw-screen p { font-size: 13px; color: #666; margin-bottom: 1rem; }
+.pw-input-wrap { display: flex; gap: 8px; }
+.pw-input-wrap .form-input { flex: 1; }
+.pw-enter {
+  background: var(--gold); color: #0a0a0a;
+  border: none; border-radius: 6px;
+  padding: 8px 16px; font-weight: 700;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer; white-space: nowrap;
+}
+.pw-error { color: #e05a7a; font-size: 12px; margin-top: 6px; }
 .filter-overlay {
   position: fixed;
   top: 0; right: 0;
@@ -316,6 +436,104 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </header>
 
 <button id="filter-button" class="filter-button">フィルター</button>
+<button id="admin-button" class="admin-button">＋ 追加</button>
+
+<!-- 管理者モーダル -->
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <!-- パスワード画面 -->
+    <div id="pw-screen" class="pw-screen">
+      <div class="modal-title">
+        管理者ログイン
+        <button class="modal-close" id="modal-close-pw">✕</button>
+      </div>
+      <p>パスワードを入力してください</p>
+      <div class="pw-input-wrap">
+        <input type="password" class="form-input" id="pw-input" placeholder="パスワード">
+        <button class="pw-enter" id="pw-enter">入力</button>
+      </div>
+      <div class="pw-error" id="pw-error"></div>
+    </div>
+    <!-- 追加フォーム -->
+    <div id="add-form-screen" style="display:none">
+      <div class="modal-title">
+        ドラマを追加
+        <button class="modal-close" id="modal-close-form">✕</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">タイトル *</label>
+          <input type="text" class="form-input" id="f-title" placeholder="例：舟を編む">
+        </div>
+        <div class="form-group">
+          <label class="form-label">国 *</label>
+          <select class="form-select" id="f-country">
+            <option value="日本">日本</option>
+            <option value="韓国">韓国</option>
+            <option value="アメリカ">アメリカ</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">簡単な内容</label>
+        <textarea class="form-textarea" id="f-summary" placeholder="あらすじを入力"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">ジャンル</label>
+          <input type="text" class="form-input" id="f-genre" placeholder="例：ヒューマン、恋愛">
+        </div>
+        <div class="form-group">
+          <label class="form-label">出演者</label>
+          <input type="text" class="form-input" id="f-cast" placeholder="例：山田太郎、鈴木花子">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">主題歌</label>
+          <input type="text" class="form-input" id="f-theme" placeholder="例：アーティスト「曲名」">
+        </div>
+        <div class="form-group">
+          <label class="form-label">放送局</label>
+          <input type="text" class="form-input" id="f-station" placeholder="例：TBS">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">放送された年</label>
+          <input type="text" class="form-input" id="f-year" placeholder="例：2024年">
+        </div>
+        <div class="form-group">
+          <label class="form-label">放送曜日・時間</label>
+          <input type="text" class="form-input" id="f-day" placeholder="例：月 22:00">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">点数（1〜5）*</label>
+          <select class="form-select" id="f-rating">
+            <option value="5">5 ★★★★★</option>
+            <option value="4">4 ★★★★☆</option>
+            <option value="3">3 ★★★☆☆</option>
+            <option value="2">2 ★★☆☆☆</option>
+            <option value="1">1 ★☆☆☆☆</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">画像URL</label>
+          <input type="text" class="form-input" id="f-image" placeholder="https://...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">感想</label>
+        <textarea class="form-textarea" id="f-review" placeholder="感想を入力"></textarea>
+      </div>
+      <button class="form-submit" id="form-submit">スプレッドシートに追加する</button>
+      <div class="form-msg" id="form-msg"></div>
+    </div>
+  </div>
+</div>
 
 <div id="filter-overlay" class="filter-overlay">
   <button class="filter-close" id="filter-close">✕　閉じる</button>
@@ -388,7 +606,86 @@ document.getElementById('year').textContent = new Date().getFullYear();
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS73DX9q8q6qFDlwKlIARecBXcy63VotnvQg4uOI_kqGLDNlkaWzg-6ibgOMoDvSjIy2j4lJVbOIeW5/pub?gid=0&single=true&output=csv';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby8F8Ug8gBDkcfqMxlVaMFmCWNxK6FJtwo6VAxZ4nrbyaThwQRu2pNq1h2LrYsKY2QZ/exec';
 
-// いいね済みタイトルをローカルに記憶
+// 管理者モーダル
+const modalOverlay = document.getElementById('modal-overlay');
+const pwScreen     = document.getElementById('pw-screen');
+const addFormScreen= document.getElementById('add-form-screen');
+
+function openModal() {
+  pwScreen.style.display = 'block';
+  addFormScreen.style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-error').textContent = '';
+  modalOverlay.classList.add('open');
+}
+function closeModal() {
+  modalOverlay.classList.remove('open');
+}
+
+document.getElementById('admin-button').addEventListener('click', openModal);
+document.getElementById('modal-close-pw').addEventListener('click', closeModal);
+document.getElementById('modal-close-form').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) closeModal(); });
+
+document.getElementById('pw-enter').addEventListener('click', checkPassword);
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
+
+function checkPassword() {
+  const val = document.getElementById('pw-input').value;
+  if (val === '241024') {
+    pwScreen.style.display = 'none';
+    addFormScreen.style.display = 'block';
+    document.getElementById('form-msg').textContent = '';
+  } else {
+    document.getElementById('pw-error').textContent = 'パスワードが違います';
+  }
+}
+
+document.getElementById('form-submit').addEventListener('click', async () => {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { 
+    document.getElementById('form-msg').textContent = 'タイトルは必須です';
+    document.getElementById('form-msg').className = 'form-msg error';
+    return;
+  }
+  const btn = document.getElementById('form-submit');
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  const payload = {
+    type: 'add',
+    password: '241024',
+    title,
+    country:  document.getElementById('f-country').value,
+    summary:  document.getElementById('f-summary').value.trim(),
+    genre:    document.getElementById('f-genre').value.trim(),
+    cast:     document.getElementById('f-cast').value.trim(),
+    theme:    document.getElementById('f-theme').value.trim(),
+    station:  document.getElementById('f-station').value.trim(),
+    year:     document.getElementById('f-year').value.trim(),
+    day:      document.getElementById('f-day').value.trim(),
+    rating:   document.getElementById('f-rating').value,
+    review:   document.getElementById('f-review').value.trim(),
+    image:    document.getElementById('f-image').value.trim(),
+  };
+  try {
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('form-msg').textContent = '✅ 追加しました！ページを再読み込みすると反映されます。';
+      document.getElementById('form-msg').className = 'form-msg success';
+      // フォームリセット
+      ['f-title','f-summary','f-genre','f-cast','f-theme','f-station','f-year','f-day','f-image','f-review']
+        .forEach(id => document.getElementById(id).value = '');
+    } else {
+      throw new Error(data.error || '失敗');
+    }
+  } catch(e) {
+    document.getElementById('form-msg').textContent = '❌ 送信に失敗しました。もう一度お試しください。';
+    document.getElementById('form-msg').className = 'form-msg error';
+  }
+  btn.disabled = false;
+  btn.textContent = 'スプレッドシートに追加する';
+});
 const likedTitles = new Set(JSON.parse(localStorage.getItem('likedTitles') || '[]'));
 
 async function loadLikes() {
@@ -414,7 +711,7 @@ async function handleLike(btn) {
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ title }),
+      body: JSON.stringify({ type: 'like', title }),
     });
     const data = await res.json();
     if (data.success) {

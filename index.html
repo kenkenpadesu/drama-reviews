@@ -7,6 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-NNT1Y6DFWF"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-NNT1Y6DFWF');
+</script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -237,6 +245,33 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .card-summary {
   font-size: 12.5px; color: #777; line-height: 1.65;
 }
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #666;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.like-btn:hover {
+  border-color: #e05a7a;
+  color: #e05a7a;
+}
+.like-btn.liked {
+  background: rgba(224,90,122,0.12);
+  border-color: #e05a7a;
+  color: #e05a7a;
+}
+.like-btn .like-icon { font-size: 14px; }
+.like-btn .like-count { font-weight: 700; }
+.like-btn.loading { opacity: 0.5; pointer-events: none; }
 
 .card-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.04); }
 .card-review {
@@ -351,6 +386,52 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 document.getElementById('year').textContent = new Date().getFullYear();
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS73DX9q8q6qFDlwKlIARecBXcy63VotnvQg4uOI_kqGLDNlkaWzg-6ibgOMoDvSjIy2j4lJVbOIeW5/pub?gid=0&single=true&output=csv';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycby8F8Ug8gBDkcfqMxlVaMFmCWNxK6FJtwo6VAxZ4nrbyaThwQRu2pNq1h2LrYsKY2QZ/exec';
+
+// いいね済みタイトルをローカルに記憶
+const likedTitles = new Set(JSON.parse(localStorage.getItem('likedTitles') || '[]'));
+
+async function loadLikes() {
+  try {
+    const res = await fetch(GAS_URL);
+    const data = await res.json();
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      const title = btn.dataset.title;
+      const count = data[title] || 0;
+      btn.querySelector('.like-count').textContent = count;
+      if (likedTitles.has(title)) {
+        btn.classList.add('liked');
+        btn.querySelector('.like-icon').textContent = '♥';
+      }
+    });
+  } catch(e) { console.log('いいね数の取得に失敗:', e); }
+}
+
+async function handleLike(btn) {
+  const title = btn.dataset.title;
+  if (btn.classList.contains('liked')) return;
+  btn.classList.add('loading');
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ title }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      btn.querySelector('.like-count').textContent = data.likes;
+      btn.querySelector('.like-icon').textContent = '♥';
+      btn.classList.add('liked');
+      btn.classList.remove('loading');
+      likedTitles.add(title);
+      localStorage.setItem('likedTitles', JSON.stringify([...likedTitles]));
+      // GA4イベント送信
+      gtag('event', 'like', { drama_title: title });
+    }
+  } catch(e) {
+    btn.classList.remove('loading');
+    console.log('いいね送信失敗:', e);
+  }
+}
 
 const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, review:10, image:11 };
 
@@ -474,6 +555,10 @@ function createCard(row) {
       ${meta.length ? `<div class="card-meta">${meta.map(esc).join('　/　')}</div>` : ''}
       ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
       ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
+      <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
+        <span class="like-icon">♡</span>
+        <span class="like-count">0</span>
+      </button>
     </div>`;
   return card;
 }
@@ -564,6 +649,7 @@ setupCheckboxGroup(document.getElementById('decade-filter'));
     rows.forEach(row => { const card = createCard(row); allCards.push(card); });
     updateStats();
     applyFiltersAndSort();
+    loadLikes();
   } catch (e) {
     document.getElementById('drama-list').innerHTML =
       '<div class="no-results">データの読み込みに失敗しました。しばらくしてから再読み込みしてください。</div>';

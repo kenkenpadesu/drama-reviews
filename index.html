@@ -122,6 +122,57 @@ body {
   display: none;
 }
 .admin-button:hover { border-color: var(--gold); color: var(--gold); }
+.delete-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: #1a1a1a;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 1rem 2rem;
+  z-index: 1000;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.delete-bar.visible { display: flex; }
+.delete-bar-info { font-size: 13px; color: #aaa; }
+.delete-bar-info strong { color: #e05a7a; }
+.delete-bar-btns { display: flex; gap: 10px; }
+.delete-cancel-btn {
+  background: transparent; border: 1px solid #555;
+  color: #888; padding: 0.6rem 1.2rem;
+  border-radius: 50px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-weight: 700;
+  transition: all 0.2s;
+}
+.delete-cancel-btn:hover { border-color: #888; color: #ccc; }
+.delete-exec-btn {
+  background: #e05a7a; border: none;
+  color: #fff; padding: 0.6rem 1.4rem;
+  border-radius: 50px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px; font-weight: 700;
+  transition: background 0.2s;
+}
+.delete-exec-btn:hover { background: #c44060; }
+.delete-exec-btn:disabled { opacity: 0.5; pointer-events: none; }
+.card-checkbox-wrap {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px; min-width: 36px;
+  cursor: pointer;
+}
+.card-checkbox-wrap input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: #e05a7a; cursor: pointer;
+}
+.delete-mode .card-checkbox-wrap { display: flex; }
+.delete-mode .drama-card.selected {
+  border-color: #e05a7a;
+  background: rgba(224,90,122,0.05);
+}
 
 /* モーダル */
 .modal-overlay {
@@ -478,6 +529,18 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 <button id="filter-button" class="filter-button">フィルター</button>
 <button id="admin-button" class="admin-button">＋ 追加</button>
+<button id="delete-mode-button" class="admin-button" style="right:220px">🗑 削除</button>
+
+<!-- 削除バー -->
+<div class="delete-bar" id="delete-bar">
+  <div class="delete-bar-info">
+    <strong id="delete-count">0</strong> 件選択中
+  </div>
+  <div class="delete-bar-btns">
+    <button class="delete-cancel-btn" id="delete-cancel-btn">キャンセル</button>
+    <button class="delete-exec-btn" id="delete-exec-btn">削除する</button>
+  </div>
+</div>
 
 <!-- 管理者モーダル -->
 <div id="modal-overlay" class="modal-overlay">
@@ -644,11 +707,87 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
 
-// 管理者ボタン：URLパラメーターが ?admin=241024 のときだけ表示
+// URLパラメーターが ?admin=241024 のときだけ表示
 const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('admin') === '241024') {
   document.getElementById('admin-button').style.display = 'block';
+  document.getElementById('delete-mode-button').style.display = 'block';
 }
+
+// 削除モード
+let isDeleteMode = false;
+
+function toggleSelect(e, wrap) {
+  if (!isDeleteMode) return;
+  e.stopPropagation();
+  const card = wrap.closest('.drama-card');
+  const cb = wrap.querySelector('input[type="checkbox"]');
+  cb.checked = !cb.checked;
+  card.classList.toggle('selected', cb.checked);
+  updateDeleteCount();
+}
+
+function updateDeleteCount() {
+  const count = document.querySelectorAll('.drama-card.selected').length;
+  document.getElementById('delete-count').textContent = count;
+}
+
+document.getElementById('delete-mode-button').addEventListener('click', () => {
+  isDeleteMode = true;
+  document.getElementById('drama-list').classList.add('delete-mode');
+  document.getElementById('delete-bar').classList.add('visible');
+  document.getElementById('delete-mode-button').style.display = 'none';
+  document.getElementById('admin-button').style.display = 'none';
+  document.getElementById('filter-button').style.display = 'none';
+});
+
+document.getElementById('delete-cancel-btn').addEventListener('click', () => {
+  isDeleteMode = false;
+  document.getElementById('drama-list').classList.remove('delete-mode');
+  document.getElementById('delete-bar').classList.remove('visible');
+  document.querySelectorAll('.drama-card.selected').forEach(c => {
+    c.classList.remove('selected');
+    c.querySelector('input[type="checkbox"]').checked = false;
+  });
+  if (urlParams.get('admin') === '241024') {
+    document.getElementById('admin-button').style.display = 'block';
+    document.getElementById('delete-mode-button').style.display = 'block';
+    document.getElementById('filter-button').style.display = 'block';
+  }
+});
+
+document.getElementById('delete-exec-btn').addEventListener('click', async () => {
+  const selected = [...document.querySelectorAll('.drama-card.selected')];
+  if (selected.length === 0) return;
+  const titles = selected.map(c => c.dataset.titleJp);
+  if (!confirm(`「${titles.join('、')}」を削除しますか？`)) return;
+
+  const btn = document.getElementById('delete-exec-btn');
+  btn.disabled = true;
+  btn.textContent = '削除中...';
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'delete', password: '241024', titles }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      selected.forEach(c => {
+        allCards = allCards.filter(ac => ac !== c);
+        c.remove();
+      });
+      document.getElementById('delete-cancel-btn').click();
+      updateStats();
+      document.getElementById('result-count').textContent = `${allCards.length}作品`;
+      alert(`${data.deleted}件削除しました`);
+    } else { throw new Error(); }
+  } catch(e) {
+    alert('削除に失敗しました。もう一度お試しください。');
+  }
+  btn.disabled = false;
+  btn.textContent = '削除する';
+});
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS73DX9q8q6qFDlwKlIARecBXcy63VotnvQg4uOI_kqGLDNlkaWzg-6ibgOMoDvSjIy2j4lJVbOIeW5/pub?gid=0&single=true&output=csv';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby8F8Ug8gBDkcfqMxlVaMFmCWNxK6FJtwo6VAxZ4nrbyaThwQRu2pNq1h2LrYsKY2QZ/exec';
@@ -894,6 +1033,9 @@ function createCard(row) {
     : `<div class="card-poster-placeholder">${emoji}</div>`;
 
   card.innerHTML = `
+    <div class="card-checkbox-wrap" onclick="toggleSelect(event, this)">
+      <input type="checkbox" onclick="event.stopPropagation()">
+    </div>
     <div class="card-header" onclick="toggleCard(this)">
       <div class="card-poster">${posterHtml}</div>
       <div class="card-header-info">

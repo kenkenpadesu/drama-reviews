@@ -83,6 +83,12 @@ body {
 }
 .site-title em { color: var(--gold); font-style: normal; }
 .site-desc { font-size: 13px; color: #5a5a5a; margin-top: 8px; letter-spacing: 0.04em; }
+.last-updated {
+  font-size: 11px; color: #4a4a4a;
+  margin-top: 6px; letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 5px;
+}
+.last-updated span { color: #6b5d3f; }
 .header-stats { display: flex; gap: 1.5rem; align-items: flex-end; }
 .stat { text-align: right; }
 .stat-num { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
@@ -520,6 +526,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div class="eyebrow">drama reviews</div>
     <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
     <div class="site-desc">私の個人的な感想と評価を記録する場所</div>
+    <div class="last-updated">最終更新：<span id="last-updated-html">2026/06/12</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
   </div>
   <div class="header-stats">
     <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-label">作品</div></div>
@@ -876,16 +883,27 @@ async function loadLikes() {
   try {
     const res = await fetch(GAS_URL);
     const data = await res.json();
+    // いいね数を反映
+    const likes = data.likes || data; // 新旧レスポンス両対応
     document.querySelectorAll('.like-btn').forEach(btn => {
       const title = btn.dataset.title;
-      const count = data[title] || 0;
+      const count = likes[title] || 0;
       btn.querySelector('.like-count').textContent = count;
       if (likedTitles.has(title)) {
         btn.classList.add('liked');
         btn.querySelector('.like-icon').textContent = '♥';
       }
     });
-  } catch(e) { console.log('いいね数の取得に失敗:', e); }
+    // データ更新日時を表示
+    if (data.lastUpdated) {
+      document.getElementById('last-updated-data').textContent = data.lastUpdated;
+    } else {
+      document.getElementById('last-updated-data').textContent = '—';
+    }
+  } catch(e) {
+    console.log('いいね数の取得に失敗:', e);
+    document.getElementById('last-updated-data').textContent = '取得失敗';
+  }
 }
 
 async function handleLike(btn) {

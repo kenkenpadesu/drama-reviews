@@ -719,10 +719,8 @@ let isDeleteMode = false;
 
 function toggleSelect(e, wrap) {
   if (!isDeleteMode) return;
-  e.stopPropagation();
   const card = wrap.closest('.drama-card');
   const cb = wrap.querySelector('input[type="checkbox"]');
-  cb.checked = !cb.checked;
   card.classList.toggle('selected', cb.checked);
   updateDeleteCount();
 }
@@ -1033,8 +1031,8 @@ function createCard(row) {
     : `<div class="card-poster-placeholder">${emoji}</div>`;
 
   card.innerHTML = `
-    <div class="card-checkbox-wrap" onclick="toggleSelect(event, this)">
-      <input type="checkbox" onclick="event.stopPropagation()">
+    <div class="card-checkbox-wrap">
+      <input type="checkbox" onchange="toggleSelect(event, this.parentElement)" onclick="event.stopPropagation()">
     </div>
     <div class="card-header" onclick="toggleCard(this)">
       <div class="card-poster">${posterHtml}</div>

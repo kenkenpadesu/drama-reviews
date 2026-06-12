@@ -374,6 +374,30 @@ body {
 .chip:hover { border-color: var(--gold); color: var(--gold); }
 .chip.active { background: var(--gold); color: var(--bg); border-color: var(--gold); font-weight: 700; }
 .result-count { margin-left: auto; font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; }
+.rating-legend {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.6rem 2rem 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.legend-item {
+  font-size: 11px;
+  color: #4a4a4a;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 0.03em;
+}
+.legend-stars { color: #c9a84c; font-size: 11px; }
+.legend-sep { font-size: 11px; color: #333; margin: 0 8px; }
+@media (max-width: 600px) {
+  .rating-legend { padding: 0.6rem 1rem 0.8rem; gap: 6px 0; }
+  .legend-sep { margin: 0 5px; }
+}
 main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .drama-list { display: flex; flex-direction: column; }
 .drama-card {
@@ -695,6 +719,18 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   <button class="chip active" data-filter="all">すべて</button>
   <span id="country-chips"></span>
   <span class="result-count" id="result-count"></span>
+</div>
+
+<div class="rating-legend">
+  <span class="legend-item"><span class="legend-stars">★★★★★</span>絶対見てほしい</span>
+  <span class="legend-sep">／</span>
+  <span class="legend-item"><span class="legend-stars">★★★★</span>すごくいい</span>
+  <span class="legend-sep">／</span>
+  <span class="legend-item"><span class="legend-stars">★★★</span>良かった</span>
+  <span class="legend-sep">／</span>
+  <span class="legend-item"><span class="legend-stars">★★</span>まあまあ</span>
+  <span class="legend-sep">／</span>
+  <span class="legend-item"><span class="legend-stars">★</span>普通</span>
 </div>
 
 <main>

@@ -693,8 +693,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 <div class="controls">
   <button class="chip active" data-filter="all">すべて</button>
-  <button class="chip" data-filter="日本">🇯🇵 日本</button>
-  <button class="chip" data-filter="韓国">🇰🇷 韓国</button>
+  <span id="country-chips"></span>
   <span class="result-count" id="result-count"></span>
 </div>
 
@@ -944,6 +943,28 @@ async function handleLike(btn) {
   }
 }
 
+function buildCountryChips() {
+  const flagMap = { '日本': '🇯🇵', '韓国': '🇰🇷', 'アメリカ': '🇺🇸', '中国': '🇨🇳', 'イギリス': '🇬🇧', 'その他': '🌏' };
+  const countries = [...new Set(allCards.map(c => c.dataset.country))].filter(Boolean);
+  // 日本・韓国を先頭に、残りはアルファベット順
+  const order = ['日本', '韓国'];
+  const sorted = [...order.filter(c => countries.includes(c)), ...countries.filter(c => !order.includes(c))];
+  const wrap = document.getElementById('country-chips');
+  wrap.innerHTML = sorted.map(country => {
+    const flag = flagMap[country] || '🌏';
+    return `<button class="chip" data-filter="${country}">${flag} ${country}</button>`;
+  }).join('');
+  // イベント再設定
+  document.querySelectorAll('.chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCountryFilter = btn.dataset.filter;
+      applyFiltersAndSort();
+    });
+  });
+}
+
 function toggleCard(header) {
   const detail = header.nextElementSibling;
   const chevron = header.querySelector('.card-chevron');
@@ -1140,13 +1161,12 @@ function setupCheckboxGroup(groupEl) {
   });
 }
 
-document.querySelectorAll('.chip').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.chip').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    currentCountryFilter = btn.dataset.filter;
-    applyFiltersAndSort();
-  });
+// 「すべて」チップのみここで設定、国チップはbuildCountryChips()で動的生成
+document.querySelector('.chip[data-filter="all"]').addEventListener('click', function() {
+  document.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+  this.classList.add('active');
+  currentCountryFilter = 'all';
+  applyFiltersAndSort();
 });
 
 document.querySelectorAll('.sort-button').forEach(btn => {
@@ -1177,6 +1197,7 @@ setupCheckboxGroup(document.getElementById('decade-filter'));
     }
     rows.forEach(row => { const card = createCard(row); allCards.push(card); });
     updateStats();
+    buildCountryChips();
     applyFiltersAndSort();
     loadLikes();
   } catch (e) {

@@ -179,6 +179,22 @@ body {
   border-color: #e05a7a;
   background: rgba(224,90,122,0.05);
 }
+.edit-btn {
+  display: none;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #666;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all 0.15s;
+  margin-top: 4px;
+  letter-spacing: 0.03em;
+}
+.edit-btn:hover { border-color: var(--gold); color: var(--gold); }
+.admin-mode .edit-btn { display: inline-block; }
 
 /* モーダル */
 .modal-overlay {
@@ -562,6 +578,88 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <button id="admin-button" class="admin-button">＋ 追加</button>
 <button id="delete-mode-button" class="admin-button" style="right:220px">🗑 削除</button>
 
+<!-- 編集モーダル -->
+<div id="edit-modal-overlay" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">
+      ドラマを編集
+      <button class="modal-close" id="edit-modal-close">✕</button>
+    </div>
+    <input type="hidden" id="e-original-title">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">タイトル *</label>
+        <input type="text" class="form-input" id="e-title">
+      </div>
+      <div class="form-group">
+        <label class="form-label">国 *</label>
+        <select class="form-select" id="e-country">
+          <option value="日本">日本</option>
+          <option value="韓国">韓国</option>
+          <option value="アメリカ">アメリカ</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">簡単な内容</label>
+      <textarea class="form-textarea" id="e-summary"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">ジャンル</label>
+        <input type="text" class="form-input" id="e-genre">
+      </div>
+      <div class="form-group">
+        <label class="form-label">出演者</label>
+        <input type="text" class="form-input" id="e-cast">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">主題歌</label>
+        <input type="text" class="form-input" id="e-theme">
+      </div>
+      <div class="form-group">
+        <label class="form-label">放送局</label>
+        <input type="text" class="form-input" id="e-station">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">放送された年</label>
+        <input type="text" class="form-input" id="e-year">
+      </div>
+      <div class="form-group">
+        <label class="form-label">放送曜日・時間</label>
+        <input type="text" class="form-input" id="e-day">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">点数（1〜5）*</label>
+        <select class="form-select" id="e-rating">
+          <option value="5">5 ★★★★★</option>
+          <option value="4">4 ★★★★☆</option>
+          <option value="3">3 ★★★☆☆</option>
+          <option value="2">2 ★★☆☆☆</option>
+          <option value="1">1 ★☆☆☆☆</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">画像URL</label>
+        <input type="text" class="form-input" id="e-image">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">感想</label>
+      <textarea class="form-textarea" id="e-review"></textarea>
+    </div>
+    <button class="form-submit" id="edit-form-submit">保存する</button>
+    <div class="form-msg" id="edit-form-msg"></div>
+  </div>
+</div>
+
 <!-- 削除バー -->
 <div class="delete-bar" id="delete-bar">
   <div class="delete-bar-info">
@@ -754,7 +852,86 @@ const urlParams = new URLSearchParams(window.location.search);
 if (urlParams.get('admin') === '241024') {
   document.getElementById('admin-button').style.display = 'block';
   document.getElementById('delete-mode-button').style.display = 'block';
+  document.getElementById('drama-list').classList.add('admin-mode');
 }
+
+// 編集モーダル
+function openEditModal(btn) {
+  const card = btn.closest('.drama-card');
+  const detail = card.querySelector('.card-detail-inner');
+  document.getElementById('e-original-title').value = card.dataset.titleJp;
+  document.getElementById('e-title').value    = card.dataset.titleJp;
+  document.getElementById('e-country').value  = card.dataset.country;
+  document.getElementById('e-summary').value  = detail.querySelector('.card-summary')?.textContent || '';
+  document.getElementById('e-review').value   = detail.querySelector('.card-review')?.textContent || '';
+  const meta = detail.querySelector('.card-meta')?.textContent || '';
+  const metaParts = meta.split('　/　');
+  document.getElementById('e-cast').value    = metaParts[0]?.trim() || '';
+  document.getElementById('e-year').value    = metaParts[1]?.trim() || '';
+  document.getElementById('e-station').value = metaParts[2]?.trim() || '';
+  // ジャンル
+  const tags = [...card.querySelectorAll('.card-bottom-row .tag')].map(t => t.textContent).join('、');
+  document.getElementById('e-genre').value = tags;
+  // 評価
+  const ratingNum = card.dataset.rating;
+  document.getElementById('e-rating').value = ratingNum;
+  // 画像URL
+  const img = card.querySelector('.card-poster img');
+  document.getElementById('e-image').value = img ? img.src : '';
+  document.getElementById('e-theme').value = '';
+  document.getElementById('edit-form-msg').textContent = '';
+  document.getElementById('edit-modal-overlay').classList.add('open');
+}
+
+document.getElementById('edit-modal-close').addEventListener('click', () => {
+  document.getElementById('edit-modal-overlay').classList.remove('open');
+});
+document.getElementById('edit-modal-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('edit-modal-overlay'))
+    document.getElementById('edit-modal-overlay').classList.remove('open');
+});
+
+document.getElementById('edit-form-submit').addEventListener('click', async () => {
+  const title = document.getElementById('e-title').value.trim();
+  if (!title) {
+    document.getElementById('edit-form-msg').textContent = 'タイトルは必須です';
+    document.getElementById('edit-form-msg').className = 'form-msg error';
+    return;
+  }
+  const btn = document.getElementById('edit-form-submit');
+  btn.disabled = true; btn.textContent = '保存中...';
+
+  const payload = {
+    type: 'edit',
+    password: '241024',
+    originalTitle: document.getElementById('e-original-title').value,
+    title,
+    country:  document.getElementById('e-country').value,
+    summary:  document.getElementById('e-summary').value.trim(),
+    genre:    document.getElementById('e-genre').value.trim(),
+    cast:     document.getElementById('e-cast').value.trim(),
+    theme:    document.getElementById('e-theme').value.trim(),
+    station:  document.getElementById('e-station').value.trim(),
+    year:     document.getElementById('e-year').value.trim(),
+    day:      document.getElementById('e-day').value.trim(),
+    rating:   document.getElementById('e-rating').value,
+    review:   document.getElementById('e-review').value.trim(),
+    image:    document.getElementById('e-image').value.trim(),
+  };
+
+  try {
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('edit-form-msg').textContent = '✅ 保存しました！ページを再読み込みすると反映されます。';
+      document.getElementById('edit-form-msg').className = 'form-msg success';
+    } else { throw new Error(data.error || '失敗'); }
+  } catch(err) {
+    document.getElementById('edit-form-msg').textContent = '❌ 保存に失敗しました。';
+    document.getElementById('edit-form-msg').className = 'form-msg error';
+  }
+  btn.disabled = false; btn.textContent = '保存する';
+});
 
 // 削除モード
 let isDeleteMode = false;
@@ -793,6 +970,7 @@ document.getElementById('delete-cancel-btn').addEventListener('click', () => {
     document.getElementById('admin-button').style.display = 'block';
     document.getElementById('delete-mode-button').style.display = 'block';
     document.getElementById('filter-button').style.display = 'block';
+    document.getElementById('drama-list').classList.add('admin-mode');
   }
 });
 
@@ -1140,10 +1318,13 @@ function createCard(row) {
         ${meta.length ? `<div class="card-meta">${meta.map(esc).join('　/　')}</div>` : ''}
         ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
         ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
-        <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
-          <span class="like-icon">♡</span>
-          <span class="like-count">0</span>
-        </button>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
+            <span class="like-icon">♡</span>
+            <span class="like-count">0</span>
+          </button>
+          <button class="edit-btn" onclick="openEditModal(this)">✏️ 編集</button>
+        </div>
       </div>
     </div>`;
   return card;

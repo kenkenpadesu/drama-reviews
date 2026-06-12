@@ -896,7 +896,19 @@ async function loadLikes() {
     });
     // データ更新日時を表示
     if (data.lastUpdated) {
-      document.getElementById('last-updated-data').textContent = data.lastUpdated;
+      const raw = data.lastUpdated;
+      // "2026-06-11T15:00:00.000Z" 形式の場合は整形
+      let display = raw;
+      if (raw.includes('T')) {
+        const d = new Date(raw);
+        const y = d.getFullYear();
+        const mo = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        const h = String(d.getHours()).padStart(2,'0');
+        const mi = String(d.getMinutes()).padStart(2,'0');
+        display = `${y}/${mo}/${day} ${h}:${mi}`;
+      }
+      document.getElementById('last-updated-data').textContent = display;
     } else {
       document.getElementById('last-updated-data').textContent = '—';
     }

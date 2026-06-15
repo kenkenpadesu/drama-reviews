@@ -567,7 +567,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div class="eyebrow">drama reviews</div>
     <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
     <div class="site-desc">私の個人的な感想と評価を記録する場所</div>
-    <div class="last-updated">最終更新：<span id="last-updated-html">2026/06/12</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
+    <div class="last-updated">最終更新：<span id="last-updated-html">読込中...</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
   </div>
   <div class="header-stats">
     <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-label">作品</div></div>
@@ -847,6 +847,25 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
+
+// サイトの最終更新日をHTMLのlast-modifiedから取得
+(async () => {
+  try {
+    const res = await fetch(location.href, { method: 'HEAD' });
+    const lastMod = res.headers.get('last-modified');
+    if (lastMod) {
+      const d = new Date(lastMod);
+      const y = d.getFullYear();
+      const mo = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      document.getElementById('last-updated-html').textContent = `${y}/${mo}/${day}`;
+    } else {
+      document.getElementById('last-updated-html').textContent = '—';
+    }
+  } catch(e) {
+    document.getElementById('last-updated-html').textContent = '—';
+  }
+})();
 
 // URLパラメーターが ?admin=241024 のときだけ表示
 const urlParams = new URLSearchParams(window.location.search);

@@ -496,6 +496,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   display: flex; flex-direction: column; gap: 8px;
 }
 .card-meta { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+.meta-label { color: #5a5a5a; }
 .card-summary { font-size: 12.5px; color: #777; line-height: 1.65; }
 .card-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.04); }
 .card-review {
@@ -1277,6 +1278,7 @@ function createCard(row) {
   const rating   = Math.round(ratingRaw);
   const review   = row[COL.review]  || '';
   const imgUrl   = row[COL.image]   || '';
+  const theme     = row[COL.theme]   || '';
   const finalC   = ['日本','韓国','アメリカ'].includes(country) ? country : 'その他';
 
   const card = document.createElement('div');
@@ -1288,7 +1290,6 @@ function createCard(row) {
   card.dataset.titleJp = title;
 
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
-  const meta = [cast, [year,day].filter(Boolean).join(' / '), station].filter(Boolean);
   const emoji = getEmoji(country);
 
   const posterHtml = imgUrl
@@ -1315,7 +1316,9 @@ function createCard(row) {
     </div>
     <div class="card-detail">
       <div class="card-detail-inner">
-        ${meta.length ? `<div class="card-meta">${meta.map(esc).join('　/　')}</div>` : ''}
+        ${cast ? `<div class="card-meta"><span class="meta-label">出演者：</span>${esc(cast)}</div>` : ''}
+        ${theme ? `<div class="card-meta"><span class="meta-label">原作：</span>${esc(theme)}</div>` : ''}
+        ${(year||day||station) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}</div>` : ''}
         ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
         ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">

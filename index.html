@@ -498,7 +498,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .radar-canvas-wrap { width: 140px; height: 140px; flex-shrink: 0; }
 .radar-scores { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px; }
 .radar-score-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
-.radar-score-label { color: #666; }
+.radar-score-label { color: #666; min-width: 48px; flex-shrink: 0; }
 .radar-score-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
 .radar-score-bar { height: 100%; border-radius: 2px; background: var(--gold); }
 .radar-score-val { color: #888; font-size: 10px; min-width: 20px; text-align: right; }
@@ -1373,14 +1373,17 @@ function createCard(row) {
   const station  = row[COL.station] || '';
   const year     = row[COL.year]    || '';
   const day      = row[COL.day]     || '';
-  const ratingRaw = parseFloat(row[COL.rating]) || 0;
-  const rating   = Math.round(ratingRaw);
   const scoreStory  = parseInt(row[COL.scoreStory])  || 0;
   const scoreCast   = parseInt(row[COL.scoreCast])   || 0;
   const scoreVisual = parseInt(row[COL.scoreVisual]) || 0;
   const scoreMusic  = parseInt(row[COL.scoreMusic])  || 0;
   const scoreSat    = parseInt(row[COL.scoreSat])    || 0;
   const hasScores   = scoreStory || scoreCast || scoreVisual || scoreMusic || scoreSat;
+  // 5項目がある場合は平均値、なければ元の点数をそのまま使用
+  const ratingRaw = hasScores
+    ? Math.round((scoreStory + scoreCast + scoreVisual + scoreMusic + scoreSat) / 5 * 10) / 10
+    : parseFloat(row[COL.rating]) || 0;
+  const rating = Math.round(ratingRaw);
   const review   = row[COL.review]  || '';
   const imgUrl   = row[COL.image]   || '';
   const theme     = row[COL.theme]   || '';
@@ -1418,7 +1421,7 @@ function createCard(row) {
           <span class="country-badge ${getBadgeClass(country)}">${getBadgeLabel(country)}</span>
         </div>
         <div class="card-bottom-row">
-          <div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw}/5</span></div>
+          <div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}/5</span></div>
           ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         </div>
       </div>

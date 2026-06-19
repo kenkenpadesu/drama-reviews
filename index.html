@@ -785,6 +785,20 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
         <div class="form-group"><label class="form-label">満足度</label><select class="form-select" id="e-score-sat"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
       </div>
     </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">1話平均時間（分）</label>
+        <input type="number" class="form-input" id="e-episode-time" placeholder="例：45" min="1" max="200">
+      </div>
+      <div class="form-group">
+        <label class="form-label">再視聴</label>
+        <select class="form-select" id="e-rewatch">
+          <option value="">未設定</option>
+          <option value="またみたい">♻️ またみたい</option>
+          <option value="1回でいい">👍 1回でいい</option>
+        </select>
+      </div>
+    </div>
     <div class="form-group">
       <label class="form-label">画像URL</label>
       <input type="text" class="form-input" id="e-image">
@@ -901,6 +915,20 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
           <div class="form-group"><label class="form-label">映像美</label><select class="form-select" id="f-score-visual"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label class="form-label">音楽</label><select class="form-select" id="f-score-music"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
           <div class="form-group"><label class="form-label">満足度</label><select class="form-select" id="f-score-sat"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">1話平均時間（分）</label>
+          <input type="number" class="form-input" id="f-episode-time" placeholder="例：45" min="1" max="200">
+        </div>
+        <div class="form-group">
+          <label class="form-label">再視聴</label>
+          <select class="form-select" id="f-rewatch">
+            <option value="">未設定</option>
+            <option value="またみたい">♻️ またみたい</option>
+            <option value="1回でいい">👍 1回でいい</option>
+          </select>
         </div>
       </div>
       <div class="form-group">
@@ -1070,7 +1098,9 @@ function openEditModal(btn) {
   document.getElementById('e-station').value         = d.station    || '';
   document.getElementById('e-year').value            = d.year       || '';
   document.getElementById('e-day').value             = d.day        || '';
-  document.getElementById('e-image').value           = d.image      || '';
+  document.getElementById('e-image').value           = d.image        || '';
+  document.getElementById('e-episode-time').value   = d.episodeTime  || '';
+  document.getElementById('e-rewatch').value         = d.rewatch      || '';
   document.getElementById('e-review').value          = d.review     || '';
   // 5項目スコア
   document.getElementById('e-score-story').value  = d.scoreStory  || '3';
@@ -1113,6 +1143,8 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
     station:  document.getElementById('e-station').value.trim(),
     year:     document.getElementById('e-year').value.trim(),
     day:      document.getElementById('e-day').value.trim(),
+    episodeTime: document.getElementById('e-episode-time').value,
+    rewatch:     document.getElementById('e-rewatch').value,
     scoreStory:  document.getElementById('e-score-story').value,
     scoreCast:   document.getElementById('e-score-cast').value,
     scoreVisual: document.getElementById('e-score-visual').value,
@@ -1270,6 +1302,8 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     station:  document.getElementById('f-station').value.trim(),
     year:     document.getElementById('f-year').value.trim(),
     day:      document.getElementById('f-day').value.trim(),
+    episodeTime: document.getElementById('f-episode-time').value,
+    rewatch:     document.getElementById('f-rewatch').value,
     scoreStory:  document.getElementById('f-score-story').value,
     scoreCast:   document.getElementById('f-score-cast').value,
     scoreVisual: document.getElementById('f-score-visual').value,
@@ -1285,8 +1319,9 @@ document.getElementById('form-submit').addEventListener('click', async () => {
       document.getElementById('form-msg').textContent = '✅ 追加しました！ページを再読み込みすると反映されます。';
       document.getElementById('form-msg').className = 'form-msg success';
       // フォームリセット
-      ['f-title','f-summary','f-genre','f-cast','f-theme','f-station','f-year','f-day','f-image','f-review']
+      ['f-title','f-summary','f-cast','f-theme','f-station','f-year','f-day','f-image','f-review','f-episode-time']
         .forEach(id => document.getElementById(id).value = '');
+      document.getElementById('f-rewatch').value = '';
       ['f-score-story','f-score-cast','f-score-visual','f-score-music','f-score-sat'].forEach(id => { document.getElementById(id).value = '3'; });
       buildGenreGrid('f-genre-grid');
     } else {
@@ -1474,7 +1509,7 @@ const GENRES = [
   'アクション・復讐', 'ファンタジー・SF', 'スポーツ', 'グルメ・お仕事'
 ];
 
-const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16 };
+const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19 };
 
 let allCards = [];
 let currentCountryFilter = 'all';
@@ -1572,8 +1607,10 @@ function createCard(row) {
     ? Math.round((scoreStory + scoreCast + scoreVisual + scoreMusic + scoreSat) / 5 * 10) / 10
     : parseFloat(row[COL.rating]) || 0;
   const rating = Math.round(ratingRaw);
-  const review   = row[COL.review]  || '';
-  const imgUrl   = row[COL.image]   || '';
+  const review      = row[COL.review]      || '';
+  const imgUrl      = row[COL.image]       || '';
+  const episodeTime = parseInt(row[COL.episodeTime]) || 0;
+  const rewatch     = row[COL.rewatch]     || '';
   const theme     = row[COL.theme]   || '';
   const finalC   = ['日本','韓国','アメリカ'].includes(country) ? country : 'その他';
 
@@ -1594,11 +1631,13 @@ function createCard(row) {
   card.dataset.day       = row[COL.day]      || '';
   card.dataset.review    = review;
   card.dataset.image     = imgUrl;
-  card.dataset.scoreStory  = scoreStory;
-  card.dataset.scoreCast   = scoreCast;
-  card.dataset.scoreVisual = scoreVisual;
-  card.dataset.scoreMusic  = scoreMusic;
-  card.dataset.scoreSat    = scoreSat;
+  card.dataset.scoreStory   = scoreStory;
+  card.dataset.scoreCast    = scoreCast;
+  card.dataset.scoreVisual  = scoreVisual;
+  card.dataset.scoreMusic   = scoreMusic;
+  card.dataset.scoreSat     = scoreSat;
+  card.dataset.episodeTime  = episodeTime;
+  card.dataset.rewatch      = rewatch;
 
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
   const emoji = getEmoji(country);
@@ -1647,6 +1686,10 @@ function createCard(row) {
             </div>`).join('')}
           </div>
         </div>` : ''}
+        <div class="card-extra-badges">
+          ${episodeTime ? `<span class="extra-badge">⏱ 約${episodeTime}分／話</span>` : ''}
+          ${rewatch === 'またみたい' ? `<span class="extra-badge rewatch-yes">♻️ またみたい</span>` : rewatch === '1回でいい' ? `<span class="extra-badge rewatch-no">👍 1回でいい</span>` : ''}
+        </div>
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
           <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-icon">♡</span>

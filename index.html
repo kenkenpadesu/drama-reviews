@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NNT1Y6DFWF"></script>
 <script>
@@ -488,9 +489,21 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   border-top: 0px solid var(--border);
 }
 .card-detail.open {
-  max-height: 800px;
+  max-height: 1200px;
   border-top: 1px solid var(--border);
 }
+.radar-section {
+  display: flex; align-items: center; gap: 16px; padding: 8px 0 4px; flex-wrap: wrap;
+}
+.radar-canvas-wrap { width: 140px; height: 140px; flex-shrink: 0; }
+.radar-scores { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px; }
+.radar-score-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
+.radar-score-label { color: #666; }
+.radar-score-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+.radar-score-bar { height: 100%; border-radius: 2px; background: var(--gold); }
+.radar-score-val { color: #888; font-size: 10px; min-width: 20px; text-align: right; }
+.score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+.score-grid .form-group { margin-bottom: 0; }
 .card-detail-inner {
   padding: 12px 14px;
   display: flex; flex-direction: column; gap: 8px;
@@ -636,21 +649,19 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
         <input type="text" class="form-input" id="e-day">
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">点数（1〜5）*</label>
-        <select class="form-select" id="e-rating">
-          <option value="5">5 ★★★★★</option>
-          <option value="4">4 ★★★★☆</option>
-          <option value="3">3 ★★★☆☆</option>
-          <option value="2">2 ★★☆☆☆</option>
-          <option value="1">1 ★☆☆☆☆</option>
-        </select>
+    <div class="form-group">
+      <label class="form-label">評価（各項目 1〜5）</label>
+      <div class="score-grid">
+        <div class="form-group"><label class="form-label">ストーリー</label><select class="form-select" id="e-score-story"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+        <div class="form-group"><label class="form-label">キャスト</label><select class="form-select" id="e-score-cast"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+        <div class="form-group"><label class="form-label">映像美</label><select class="form-select" id="e-score-visual"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+        <div class="form-group"><label class="form-label">音楽</label><select class="form-select" id="e-score-music"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+        <div class="form-group"><label class="form-label">満足度</label><select class="form-select" id="e-score-sat"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">画像URL</label>
-        <input type="text" class="form-input" id="e-image">
-      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">画像URL</label>
+      <input type="text" class="form-input" id="e-image">
     </div>
     <div class="form-group">
       <label class="form-label">感想</label>
@@ -743,21 +754,19 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
           <input type="text" class="form-input" id="f-day" placeholder="例：月 22:00">
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">点数（1〜5）*</label>
-          <select class="form-select" id="f-rating">
-            <option value="5">5 ★★★★★</option>
-            <option value="4">4 ★★★★☆</option>
-            <option value="3">3 ★★★☆☆</option>
-            <option value="2">2 ★★☆☆☆</option>
-            <option value="1">1 ★☆☆☆☆</option>
-          </select>
+      <div class="form-group">
+        <label class="form-label">評価（各項目 1〜5）</label>
+        <div class="score-grid">
+          <div class="form-group"><label class="form-label">ストーリー</label><select class="form-select" id="f-score-story"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label class="form-label">キャスト</label><select class="form-select" id="f-score-cast"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label class="form-label">映像美</label><select class="form-select" id="f-score-visual"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label class="form-label">音楽</label><select class="form-select" id="f-score-music"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
+          <div class="form-group"><label class="form-label">満足度</label><select class="form-select" id="f-score-sat"><option value="5">5</option><option value="4">4</option><option value="3" selected>3</option><option value="2">2</option><option value="1">1</option></select></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">画像URL</label>
-          <input type="text" class="form-input" id="f-image" placeholder="https://...">
-        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">画像URL</label>
+        <input type="text" class="form-input" id="f-image" placeholder="https://...">
       </div>
       <div class="form-group">
         <label class="form-label">感想</label>
@@ -894,7 +903,18 @@ function openEditModal(btn) {
   document.getElementById('e-genre').value = tags;
   // 評価
   const ratingNum = card.dataset.rating;
-  document.getElementById('e-rating').value = ratingNum;
+  // 5項目スコアをカードのdatasetから読み込み
+  document.getElementById('e-score-story').value  = card.dataset.scoreStory  || '3';
+  document.getElementById('e-score-cast').value   = card.dataset.scoreCast   || '3';
+  document.getElementById('e-score-visual').value = card.dataset.scoreVisual || '3';
+  document.getElementById('e-score-music').value  = card.dataset.scoreMusic  || '3';
+  document.getElementById('e-score-sat').value    = card.dataset.scoreSat    || '3';
+  // 5項目スコアをカードのdatasetから読み込み
+  document.getElementById('e-score-story').value  = card.dataset.scoreStory  || '3';
+  document.getElementById('e-score-cast').value   = card.dataset.scoreCast   || '3';
+  document.getElementById('e-score-visual').value = card.dataset.scoreVisual || '3';
+  document.getElementById('e-score-music').value  = card.dataset.scoreMusic  || '3';
+  document.getElementById('e-score-sat').value    = card.dataset.scoreSat    || '3';
   // 画像URL
   const img = card.querySelector('.card-poster img');
   document.getElementById('e-image').value = img ? img.src : '';
@@ -934,7 +954,11 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
     station:  document.getElementById('e-station').value.trim(),
     year:     document.getElementById('e-year').value.trim(),
     day:      document.getElementById('e-day').value.trim(),
-    rating:   document.getElementById('e-rating').value,
+    scoreStory:  document.getElementById('e-score-story').value,
+    scoreCast:   document.getElementById('e-score-cast').value,
+    scoreVisual: document.getElementById('e-score-visual').value,
+    scoreMusic:  document.getElementById('e-score-music').value,
+    scoreSat:    document.getElementById('e-score-sat').value,
     review:   document.getElementById('e-review').value.trim(),
     image:    document.getElementById('e-image').value.trim(),
   };
@@ -1087,7 +1111,11 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     station:  document.getElementById('f-station').value.trim(),
     year:     document.getElementById('f-year').value.trim(),
     day:      document.getElementById('f-day').value.trim(),
-    rating:   document.getElementById('f-rating').value,
+    scoreStory:  document.getElementById('f-score-story').value,
+    scoreCast:   document.getElementById('f-score-cast').value,
+    scoreVisual: document.getElementById('f-score-visual').value,
+    scoreMusic:  document.getElementById('f-score-music').value,
+    scoreSat:    document.getElementById('f-score-sat').value,
     review:   document.getElementById('f-review').value.trim(),
     image:    document.getElementById('f-image').value.trim(),
   };
@@ -1100,6 +1128,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
       // フォームリセット
       ['f-title','f-summary','f-genre','f-cast','f-theme','f-station','f-year','f-day','f-image','f-review']
         .forEach(id => document.getElementById(id).value = '');
+      ['f-score-story','f-score-cast','f-score-visual','f-score-music','f-score-sat'].forEach(id => { document.getElementById(id).value = '3'; });
     } else {
       throw new Error(data.error || '失敗');
     }
@@ -1204,9 +1233,60 @@ function toggleCard(header) {
   const chevron = header.querySelector('.card-chevron');
   detail.classList.toggle('open');
   chevron.classList.toggle('open');
+  if (detail.classList.contains('open')) {
+    const card = header.closest('.drama-card');
+    drawRadarChart(card);
+  }
 }
 
-const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, review:10, image:11 };
+function drawRadarChart(card) {
+  const canvas = card.querySelector('.radar-chart');
+  if (!canvas) return;
+  if (canvas._chartInstance) { canvas._chartInstance.destroy(); }
+  const scores = [
+    parseInt(card.dataset.scoreStory)  || 0,
+    parseInt(card.dataset.scoreCast)   || 0,
+    parseInt(card.dataset.scoreVisual) || 0,
+    parseInt(card.dataset.scoreMusic)  || 0,
+    parseInt(card.dataset.scoreSat)    || 0,
+  ];
+  canvas._chartInstance = new Chart(canvas, {
+    type: 'radar',
+    data: {
+      labels: ['ストーリー','キャスト','映像美','音楽','満足度'],
+      datasets: [{
+        data: scores,
+        fill: true,
+        backgroundColor: 'rgba(201,168,76,0.18)',
+        borderColor: '#c9a84c',
+        borderWidth: 1.5,
+        pointBackgroundColor: '#c9a84c',
+        pointRadius: 3,
+      }]
+    },
+    options: {
+      responsive: false,
+      scales: {
+        r: {
+          min: 0, max: 5,
+          ticks: { stepSize: 1, display: false, backdropColor: 'transparent' },
+          grid: { color: 'rgba(255,255,255,0.08)' },
+          angleLines: { color: 'rgba(255,255,255,0.08)' },
+          pointLabels: { color: '#666', font: { size: 9, family: "'Noto Sans JP', sans-serif" } }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+function drawAllRadarCharts() {
+  document.querySelectorAll('.card-detail.open').forEach(detail => {
+    drawRadarChart(detail.closest('.drama-card'));
+  });
+}
+
+const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16 };
 
 let allCards = [];
 let currentCountryFilter = 'all';
@@ -1295,6 +1375,12 @@ function createCard(row) {
   const day      = row[COL.day]     || '';
   const ratingRaw = parseFloat(row[COL.rating]) || 0;
   const rating   = Math.round(ratingRaw);
+  const scoreStory  = parseInt(row[COL.scoreStory])  || 0;
+  const scoreCast   = parseInt(row[COL.scoreCast])   || 0;
+  const scoreVisual = parseInt(row[COL.scoreVisual]) || 0;
+  const scoreMusic  = parseInt(row[COL.scoreMusic])  || 0;
+  const scoreSat    = parseInt(row[COL.scoreSat])    || 0;
+  const hasScores   = scoreStory || scoreCast || scoreVisual || scoreMusic || scoreSat;
   const review   = row[COL.review]  || '';
   const imgUrl   = row[COL.image]   || '';
   const theme     = row[COL.theme]   || '';
@@ -1307,6 +1393,11 @@ function createCard(row) {
   card.dataset.year    = parseInt(year) || 0;
   card.dataset.decade  = getDecade(year);
   card.dataset.titleJp = title;
+  card.dataset.scoreStory  = scoreStory;
+  card.dataset.scoreCast   = scoreCast;
+  card.dataset.scoreVisual = scoreVisual;
+  card.dataset.scoreMusic  = scoreMusic;
+  card.dataset.scoreSat    = scoreSat;
 
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
   const emoji = getEmoji(country);
@@ -1340,6 +1431,21 @@ function createCard(row) {
         ${(year||day||station) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}</div>` : ''}
         ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
         ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
+        ${hasScores ? `
+        <div class="card-divider"></div>
+        <div class="radar-section">
+          <div class="radar-canvas-wrap">
+            <canvas class="radar-chart" width="140" height="140" aria-label="${esc(title)}のレーダーチャート"></canvas>
+          </div>
+          <div class="radar-scores">
+            ${[['ストーリー',scoreStory],['キャスト',scoreCast],['映像美',scoreVisual],['音楽',scoreMusic],['満足度',scoreSat]].map(([lbl,val])=>`
+            <div class="radar-score-row">
+              <span class="radar-score-label">${lbl}</span>
+              <div class="radar-score-bar-wrap"><div class="radar-score-bar" style="width:${val*20}%"></div></div>
+              <span class="radar-score-val">${val}/5</span>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
           <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-icon">♡</span>
@@ -1387,6 +1493,8 @@ function applyFiltersAndSort() {
     visible.forEach(c => listEl.appendChild(c));
   }
   document.getElementById('result-count').textContent = `${visible.length}作品`;
+  // 展開済みカードのレーダーを再描画
+  setTimeout(drawAllRadarCharts, 0);
 }
 
 function setupCheckboxGroup(groupEl) {

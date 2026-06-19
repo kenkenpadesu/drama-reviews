@@ -708,21 +708,23 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 @media (min-width: 768px) {
   .card-body-layout {
     flex-direction: row;
-    align-items: flex-start;
-    gap: 32px;
+    align-items: center;
+    gap: 24px;
   }
   .card-body-left {
-    flex: 1.4;
+    flex: 1;
     min-width: 0;
   }
   .card-body-right {
     flex: 1;
-    flex-shrink: 0;
-    min-width: 340px;
-    max-width: 420px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
   }
-  .card-body-right .radar-canvas-wrap { width: 160px; height: 160px; }
-  .card-body-right .radar-scores { min-width: 150px; gap: 7px; }
+  .card-body-right .radar-canvas-wrap { width: 180px; height: 180px; flex-shrink: 0; }
+  .card-body-right .radar-scores { flex: 1; min-width: 0; gap: 8px; }
 }
 
 .card-bottom-action {

@@ -684,6 +684,43 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .drama-title { font-size: 14px; }
   .filter-overlay { width: 100%; }
 }
+
+/* カード詳細 2カラムレイアウト */
+.card-meta-block { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.card-body-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 24px;
+  align-items: flex-start;
+}
+.card-body-left {
+  flex: 1;
+  min-width: 0;
+}
+.card-body-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+.card-body-right .radar-canvas-wrap { width: 160px; height: 160px; flex-shrink: 0; }
+.card-body-right .radar-scores { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
+.card-bottom-action {
+  display: flex; gap: 10px; align-items: center; margin-top: 12px;
+}
+/* またみたいバッジをタグスタイルに */
+.extra-badge {
+  font-size: 11px;
+  color: var(--text-sub);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  padding: 2px 8px;
+  letter-spacing: 0.02em;
+}
+.extra-badge.rewatch-yes { color: var(--gold); border-color: rgba(201,168,76,0.5); }
+.extra-badge.rewatch-no  { color: #666; border-color: rgba(255,255,255,0.12); }
 </style>
 </head>
 <body>

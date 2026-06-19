@@ -794,8 +794,8 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
         <label class="form-label">再視聴</label>
         <select class="form-select" id="e-rewatch">
           <option value="">未設定</option>
-          <option value="またみたい">♻️ またみたい</option>
-          <option value="1回でいい">👍 1回でいい</option>
+          <option value="またみたい">またみたい</option>
+          <option value="1回でいい">1回でいい</option>
         </select>
       </div>
     </div>
@@ -926,8 +926,8 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
           <label class="form-label">再視聴</label>
           <select class="form-select" id="f-rewatch">
             <option value="">未設定</option>
-            <option value="またみたい">♻️ またみたい</option>
-            <option value="1回でいい">👍 1回でいい</option>
+            <option value="またみたい">またみたい</option>
+            <option value="1回でいい">1回でいい</option>
           </select>
         </div>
       </div>
@@ -1668,7 +1668,7 @@ function createCard(row) {
       <div class="card-detail-inner">
         ${cast ? `<div class="card-meta"><span class="meta-label">出演者：</span>${esc(cast)}</div>` : ''}
         ${theme ? `<div class="card-meta"><span class="meta-label">原作：</span>${esc(theme)}</div>` : ''}
-        ${(year||day||station) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}</div>` : ''}
+        ${(year||day||station||episodeTime) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}${episodeTime ? '　/　1話平均時間：約'+episodeTime+'分／話' : ''}</div>` : ''}
         ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
         ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
         ${hasScores ? `
@@ -1686,10 +1686,9 @@ function createCard(row) {
             </div>`).join('')}
           </div>
         </div>` : ''}
-        <div class="card-extra-badges">
-          ${episodeTime ? `<span class="extra-badge">⏱ 約${episodeTime}分／話</span>` : ''}
-          ${rewatch === 'またみたい' ? `<span class="extra-badge rewatch-yes">♻️ またみたい</span>` : rewatch === '1回でいい' ? `<span class="extra-badge rewatch-no">👍 1回でいい</span>` : ''}
-        </div>
+        ${rewatch ? `<div class="card-extra-badges">
+          ${rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>'}
+        </div>` : ''}
         <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
           <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-icon">♡</span>

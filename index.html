@@ -94,6 +94,61 @@ body {
 .stat { text-align: right; }
 .stat-num { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
 .stat-label { font-size: 11px; color: #5a5a5a; margin-top: 3px; letter-spacing: 0.08em; }
+/* 検索BOX */
+.search-bar-wrap {
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: min(460px, calc(100vw - 320px));
+}
+.search-bar {
+  width: 100%;
+  background: rgba(30,30,30,0.95);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 50px;
+  padding: 0.6rem 1.2rem 0.6rem 2.8rem;
+  color: var(--text);
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.search-bar:focus { border-color: var(--gold); }
+.search-bar::placeholder { color: #555; }
+.search-bar-icon {
+  position: absolute;
+  left: 1rem; top: 50%;
+  transform: translateY(-50%);
+  color: #555;
+  font-size: 14px;
+  pointer-events: none;
+}
+/* ジャンルチェックボックス（フォーム内） */
+.genre-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+}
+.genre-check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-sub);
+  cursor: pointer;
+  padding: 5px 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  user-select: none;
+}
+.genre-check-label:hover { border-color: var(--gold); color: var(--text); }
+.genre-check-label input { accent-color: var(--gold); margin: 0; }
+.genre-check-label.checked { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
 .filter-button {
   position: fixed;
   top: 20px; right: 20px;
@@ -562,6 +617,57 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .no-results { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 14px; }
+
+/* 検索BOX */
+.search-wrap {
+  max-width: 1400px; margin: 0 auto;
+  padding: 1rem 2rem 0;
+}
+.search-box {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 0 14px;
+  transition: border-color 0.2s;
+}
+.search-box:focus-within { border-color: var(--gold); }
+.search-icon { color: #444; font-size: 15px; flex-shrink: 0; }
+.search-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px; padding: 11px 0;
+}
+.search-input::placeholder { color: #444; }
+.search-clear {
+  background: transparent; border: none; color: #444; font-size: 16px;
+  cursor: pointer; padding: 4px; line-height: 1;
+  display: none;
+}
+.search-clear.visible { display: block; }
+.search-clear:hover { color: #888; }
+
+/* ジャンル選択チェックボックス（フォーム内） */
+.genre-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;
+}
+.genre-check-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-sub); cursor: pointer;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px;
+  transition: all 0.15s;
+  user-select: none;
+}
+.genre-check-label:hover { border-color: var(--gold); color: var(--text); }
+.genre-check-label input[type="checkbox"] { display: none; }
+.genre-check-label.checked {
+  background: rgba(201,168,76,0.12);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
 footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border-top: 1px solid rgba(255,255,255,0.04); letter-spacing: 0.06em; }
 @media (max-width: 600px) {
   .site-header, .controls, main { padding-left: 1rem; padding-right: 1rem; }
@@ -588,6 +694,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   </div>
 </header>
 
+<div class="search-bar-wrap">
+  <span class="search-bar-icon">🔍</span>
+  <input type="text" class="search-bar" id="search-input" placeholder="タイトル・出演者・ジャンルで検索...">
+</div>
 <button id="filter-button" class="filter-button">フィルター</button>
 <button id="admin-button" class="admin-button">＋ 追加</button>
 <button id="delete-mode-button" class="admin-button" style="right:220px">🗑 削除</button>
@@ -621,8 +731,21 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">ジャンル</label>
-        <input type="text" class="form-input" id="e-genre">
+        <label class="form-label">ジャンル（複数選択可）</label>
+      <div class="genre-grid" id="e-genre-grid">
+          <label class="genre-check-label"><input type="checkbox" value="ロマンス"> ロマンス</label>
+          <label class="genre-check-label"><input type="checkbox" value="ヒューマン"> ヒューマン</label>
+          <label class="genre-check-label"><input type="checkbox" value="サスペンス・ミステリー"> サスペンス・ミステリー</label>
+          <label class="genre-check-label"><input type="checkbox" value="刑事・警察・法廷"> 刑事・警察・法廷</label>
+          <label class="genre-check-label"><input type="checkbox" value="コメディ"> コメディ</label>
+          <label class="genre-check-label"><input type="checkbox" value="医療"> 医療</label>
+          <label class="genre-check-label"><input type="checkbox" value="青春・学園"> 青春・学園</label>
+          <label class="genre-check-label"><input type="checkbox" value="社会派"> 社会派</label>
+          <label class="genre-check-label"><input type="checkbox" value="アクション・復讐"> アクション・復讐</label>
+          <label class="genre-check-label"><input type="checkbox" value="ファンタジー・SF"> ファンタジー・SF</label>
+          <label class="genre-check-label"><input type="checkbox" value="スポーツ"> スポーツ</label>
+          <label class="genre-check-label"><input type="checkbox" value="グルメ・お仕事"> グルメ・お仕事</label>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">出演者</label>
@@ -726,8 +849,21 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">ジャンル</label>
-          <input type="text" class="form-input" id="f-genre" placeholder="例：ヒューマン、恋愛">
+          <label class="form-label">ジャンル（複数選択可）</label>
+          <div class="genre-grid" id="f-genre-grid">
+          <label class="genre-check-label"><input type="checkbox" value="ロマンス"> ロマンス</label>
+          <label class="genre-check-label"><input type="checkbox" value="ヒューマン"> ヒューマン</label>
+          <label class="genre-check-label"><input type="checkbox" value="サスペンス・ミステリー"> サスペンス・ミステリー</label>
+          <label class="genre-check-label"><input type="checkbox" value="刑事・警察・法廷"> 刑事・警察・法廷</label>
+          <label class="genre-check-label"><input type="checkbox" value="コメディ"> コメディ</label>
+          <label class="genre-check-label"><input type="checkbox" value="医療"> 医療</label>
+          <label class="genre-check-label"><input type="checkbox" value="青春・学園"> 青春・学園</label>
+          <label class="genre-check-label"><input type="checkbox" value="社会派"> 社会派</label>
+          <label class="genre-check-label"><input type="checkbox" value="アクション・復讐"> アクション・復讐</label>
+          <label class="genre-check-label"><input type="checkbox" value="ファンタジー・SF"> ファンタジー・SF</label>
+          <label class="genre-check-label"><input type="checkbox" value="スポーツ"> スポーツ</label>
+          <label class="genre-check-label"><input type="checkbox" value="グルメ・お仕事"> グルメ・お仕事</label>
+        </div>
         </div>
         <div class="form-group">
           <label class="form-label">出演者</label>
@@ -812,6 +948,12 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     </div>
   </div>
   <div class="filter-section">
+    <div class="filter-section-title">ジャンルで絞り込み</div>
+    <div class="filter-options" id="genre-filter">
+      <label><input type="checkbox" value="all" checked> すべてのジャンル</label>
+    </div>
+  </div>
+  <div class="filter-section">
     <div class="filter-section-title">年代で絞り込み</div>
     <div class="filter-options" id="decade-filter">
       <label><input type="checkbox" value="all" checked> すべての年代</label>
@@ -820,6 +962,32 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <label><input type="checkbox" value="2000"> 2000年代</label>
       <label><input type="checkbox" value="その他"> その他</label>
     </div>
+    </div>
+  <div class="filter-section">
+    <div class="filter-section-title">ジャンルで絞り込み</div>
+    <div class="filter-options" id="genre-filter">
+      <label><input type="checkbox" value="all" checked> すべてのジャンル</label>
+      <label><input type="checkbox" value="ロマンス"> ロマンス</label>
+      <label><input type="checkbox" value="ヒューマン"> ヒューマン</label>
+      <label><input type="checkbox" value="サスペンス・ミステリー"> サスペンス・ミステリー</label>
+      <label><input type="checkbox" value="刑事・警察・法廷"> 刑事・警察・法廷</label>
+      <label><input type="checkbox" value="コメディ"> コメディ</label>
+      <label><input type="checkbox" value="医療"> 医療</label>
+      <label><input type="checkbox" value="青春・学園"> 青春・学園</label>
+      <label><input type="checkbox" value="社会派"> 社会派</label>
+      <label><input type="checkbox" value="アクション・復讐"> アクション・復讐</label>
+      <label><input type="checkbox" value="ファンタジー・SF"> ファンタジー・SF</label>
+      <label><input type="checkbox" value="スポーツ"> スポーツ</label>
+      <label><input type="checkbox" value="グルメ・お仕事"> グルメ・お仕事</label>
+    </div>
+  </div>
+</div>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" class="search-input" id="search-input" placeholder="タイトル・出演者・ジャンルで検索...">
+    <button class="search-clear" id="search-clear">✕</button>
   </div>
 </div>
 
@@ -893,7 +1061,9 @@ function openEditModal(btn) {
   document.getElementById('e-title').value           = d.titleJp    || '';
   document.getElementById('e-country').value         = d.country    || '';
   document.getElementById('e-summary').value         = d.summary    || '';
-  document.getElementById('e-genre').value           = d.genre      || '';
+  // ジャンルグリッドを現在値で初期化
+  const currentGenres = (d.genre || '').split(/[、,，]/).map(g => g.trim()).filter(Boolean);
+  buildGenreGrid('e-genre-grid', currentGenres);
   document.getElementById('e-cast').value            = d.cast       || '';
   document.getElementById('e-theme').value           = d.theme      || '';
   document.getElementById('e-station').value         = d.station    || '';
@@ -936,7 +1106,7 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
     title,
     country:  document.getElementById('e-country').value,
     summary:  document.getElementById('e-summary').value.trim(),
-    genre:    document.getElementById('e-genre').value.trim(),
+    genre:    getGenreValues('e-genre-grid').join('、'),
     cast:     document.getElementById('e-cast').value.trim(),
     theme:    document.getElementById('e-theme').value.trim(),
     station:  document.getElementById('e-station').value.trim(),
@@ -1093,7 +1263,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     title,
     country:  document.getElementById('f-country').value,
     summary:  document.getElementById('f-summary').value.trim(),
-    genre:    document.getElementById('f-genre').value.trim(),
+    genre:    getGenreValues('f-genre-grid').join('、'),
     cast:     document.getElementById('f-cast').value.trim(),
     theme:    document.getElementById('f-theme').value.trim(),
     station:  document.getElementById('f-station').value.trim(),
@@ -1117,6 +1287,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
       ['f-title','f-summary','f-genre','f-cast','f-theme','f-station','f-year','f-day','f-image','f-review']
         .forEach(id => document.getElementById(id).value = '');
       ['f-score-story','f-score-cast','f-score-visual','f-score-music','f-score-sat'].forEach(id => { document.getElementById(id).value = '3'; });
+      buildGenreGrid('f-genre-grid');
     } else {
       throw new Error(data.error || '失敗');
     }
@@ -1216,6 +1387,28 @@ function buildCountryChips() {
   });
 }
 
+
+// ジャンルグリッドを初期化
+function buildGenreGrid(containerId, selectedGenres = []) {
+  const wrap = document.getElementById(containerId);
+  if (!wrap) return;
+  wrap.innerHTML = GENRES.map(g => {
+    const checked = selectedGenres.includes(g) ? ' checked' : '';
+    const cls = selectedGenres.includes(g) ? ' checked' : '';
+    return `<label class="genre-check-label${cls}">
+      <input type="checkbox" value="${g}"${checked} onchange="toggleGenreLabel(this)"> ${g}
+    </label>`;
+  }).join('');
+}
+
+function toggleGenreLabel(cb) {
+  cb.closest('.genre-check-label').classList.toggle('checked', cb.checked);
+}
+
+function getGenreValues(containerId) {
+  return [...document.querySelectorAll(`#${containerId} input:checked`)].map(cb => cb.value);
+}
+
 function toggleCard(header) {
   const detail = header.nextElementSibling;
   const chevron = header.querySelector('.card-chevron');
@@ -1273,6 +1466,12 @@ function drawAllRadarCharts() {
     drawRadarChart(detail.closest('.drama-card'));
   });
 }
+
+const GENRES = [
+  'ロマンス', 'ヒューマン', 'サスペンス・ミステリー', '刑事・警察・法廷',
+  'コメディ', '医療', '青春・学園', '社会派',
+  'アクション・復讐', 'ファンタジー・SF', 'スポーツ', 'グルメ・お仕事'
+];
 
 const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16 };
 
@@ -1470,13 +1669,19 @@ function applyFiltersAndSort() {
   const selC = [...document.querySelectorAll('#country-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
   const selR = [...document.querySelectorAll('#rating-filter input:checked')].map(cb=>parseFloat(cb.value)).filter(v=>!isNaN(v));
   const selD = [...document.querySelectorAll('#decade-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
+  const selG = [...document.querySelectorAll('#genre-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
+
+  const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
 
   let visible = allCards.filter(card => {
     const cOk = selC.length===0 || selC.includes(card.dataset.country);
     const rOk = selR.length===0 || selR.includes(parseFloat(card.dataset.rating));
     const dOk = selD.length===0 || selD.includes(card.dataset.decade);
     const chipOk = currentCountryFilter==='all' || card.dataset.country===currentCountryFilter;
-    return cOk && rOk && dOk && chipOk;
+    const qOk = !q || [card.dataset.titleJp, card.dataset.cast, card.dataset.genre]
+      .some(v => v && v.toLowerCase().includes(q));
+    const gOk = selG.length===0 || selG.some(g => (card.dataset.genre||'').includes(g));
+    return cOk && rOk && dOk && chipOk && qOk && gOk;
   });
 
   switch (currentSort) {
@@ -1528,6 +1733,18 @@ document.getElementById('filter-close').addEventListener('click', () => {
   document.getElementById('filter-overlay').classList.remove('open');
 });
 
+
+// ジャンルフィルターパネルを動的生成
+(function() {
+  const wrap = document.getElementById('genre-filter');
+  GENRES.forEach(g => {
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" value="${g}"> ${g}`;
+    wrap.appendChild(label);
+  });
+  setupCheckboxGroup(wrap);
+})();
+
 setupCheckboxGroup(document.getElementById('country-filter'));
 setupCheckboxGroup(document.getElementById('rating-filter'));
 setupCheckboxGroup(document.getElementById('decade-filter'));
@@ -1548,6 +1765,24 @@ setupCheckboxGroup(document.getElementById('decade-filter'));
     buildCountryChips();
     applyFiltersAndSort();
     loadLikes();
+
+// 検索BOX
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+searchInput.addEventListener('input', () => {
+  searchClear.classList.toggle('visible', searchInput.value.length > 0);
+  applyFiltersAndSort();
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchClear.classList.remove('visible');
+  applyFiltersAndSort();
+});
+
+// ジャンルグリッド初期化（追加・編集フォーム）
+buildGenreGrid('f-genre-grid');
+buildGenreGrid('e-genre-grid');
+
   } catch (e) {
     document.getElementById('drama-list').innerHTML =
       '<div class="no-results">データの読み込みに失敗しました。しばらくしてから再読み込みしてください。</div>';

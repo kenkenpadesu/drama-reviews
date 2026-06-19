@@ -96,25 +96,50 @@ body {
 .stat-label { font-size: 11px; color: #5a5a5a; margin-top: 3px; letter-spacing: 0.08em; }
 /* 検索BOX */
 .search-bar-wrap {
-  position: fixed;
-  top: 18px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1000;
-  width: min(460px, calc(100vw - 320px));
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  width: 260px;
+  margin-bottom: 0;
+  z-index: auto;
+  background: var(--surface);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px;
+  padding: 0 14px;
+  gap: 8px;
+  transition: border-color 0.25s, box-shadow 0.25s;
 }
+.search-bar-wrap:focus-within {
+  border-color: rgba(201,168,76,0.5);
+  box-shadow: 0 0 0 3px rgba(201,168,76,0.07);
+}
+.search-btn {
+  flex-shrink: 0;
+  background: var(--gold);
+  color: #111;
+  border: none;
+  border-radius: 14px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+.search-btn:hover { opacity: 0.85; }
+.search-bar-icon { font-size: 12px; opacity: 0.35; flex-shrink: 0; }
 .search-bar {
-  width: 100%;
-  background: rgba(30,30,30,0.95);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 50px;
-  padding: 0.6rem 1.2rem 0.6rem 2.8rem;
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 8px 0;
   color: var(--text);
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
+  min-width: 0;
 }
 .search-bar:focus { border-color: var(--gold); }
 .search-bar::placeholder { color: #555; }
@@ -618,35 +643,17 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .no-results { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 14px; }
 
-/* 検索BOX */
-.search-wrap {
-  max-width: 1400px; margin: 0 auto;
-  padding: 1rem 2rem 0;
+.search-and-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  padding-left: 4px;
 }
-.search-box {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 8px;
-  padding: 0 14px;
-  transition: border-color 0.2s;
+.search-and-controls .controls {
+  margin-bottom: 0;
 }
-.search-box:focus-within { border-color: var(--gold); }
-.search-icon { color: #444; font-size: 15px; flex-shrink: 0; }
-.search-input {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: 'Noto Sans JP', sans-serif;
-  font-size: 14px; padding: 11px 0;
-}
-.search-input::placeholder { color: #444; }
-.search-clear {
-  background: transparent; border: none; color: #444; font-size: 16px;
-  cursor: pointer; padding: 4px; line-height: 1;
-  display: none;
-}
-.search-clear.visible { display: block; }
-.search-clear:hover { color: #888; }
-
 /* ジャンル選択チェックボックス（フォーム内） */
 .genre-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;
@@ -694,10 +701,6 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   </div>
 </header>
 
-<div class="search-bar-wrap">
-  <span class="search-bar-icon">🔍</span>
-  <input type="text" class="search-bar" id="search-input" placeholder="タイトル・出演者・ジャンルで検索...">
-</div>
 <button id="filter-button" class="filter-button">フィルター</button>
 <button id="admin-button" class="admin-button">＋ 追加</button>
 <button id="delete-mode-button" class="admin-button" style="right:220px">🗑 削除</button>
@@ -983,20 +986,6 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   </div>
 </div>
 
-<div class="search-wrap">
-  <div class="search-box">
-    <span class="search-icon">🔍</span>
-    <input type="text" class="search-input" id="search-input" placeholder="タイトル・出演者・ジャンルで検索...">
-    <button class="search-clear" id="search-clear">✕</button>
-  </div>
-</div>
-
-<div class="controls">
-  <button class="chip active" data-filter="all">すべて</button>
-  <span id="country-chips"></span>
-  <span class="result-count" id="result-count"></span>
-</div>
-
 <div class="rating-legend">
   <span class="legend-item"><span class="legend-stars">★★★★★</span>絶対見てほしい</span>
   <span class="legend-sep">／</span>
@@ -1010,6 +999,18 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <main>
+<div class="search-and-controls">
+  <div class="search-bar-wrap">
+    <span class="search-bar-icon">🔍</span>
+    <input type="text" class="search-bar" id="search-input" placeholder="検索...">
+    <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
+  </div>
+  <div class="controls">
+  <button class="chip active" data-filter="all">すべて</button>
+  <span id="country-chips"></span>
+  <span class="result-count" id="result-count"></span>
+</div>
+</div>
   <div id="drama-list" class="drama-list">
     <div class="status-msg">
       <div class="spinner"></div>
@@ -1766,18 +1767,11 @@ setupCheckboxGroup(document.getElementById('decade-filter'));
     applyFiltersAndSort();
     loadLikes();
 
-// 検索BOX
+// 検索BOX（既存のsearch-bar inputに接続）
 const searchInput = document.getElementById('search-input');
-const searchClear = document.getElementById('search-clear');
-searchInput.addEventListener('input', () => {
-  searchClear.classList.toggle('visible', searchInput.value.length > 0);
-  applyFiltersAndSort();
-});
-searchClear.addEventListener('click', () => {
-  searchInput.value = '';
-  searchClear.classList.remove('visible');
-  applyFiltersAndSort();
-});
+if (searchInput) {
+  searchInput.addEventListener('input', () => { applyFiltersAndSort(); });
+}
 
 // ジャンルグリッド初期化（追加・編集フォーム）
 buildGenreGrid('f-genre-grid');

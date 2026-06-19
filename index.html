@@ -887,38 +887,26 @@ if (urlParams.get('admin') === '241024') {
 // 編集モーダル
 function openEditModal(btn) {
   const card = btn.closest('.drama-card');
-  const detail = card.querySelector('.card-detail-inner');
-  document.getElementById('e-original-title').value = card.dataset.titleJp;
-  document.getElementById('e-title').value    = card.dataset.titleJp;
-  document.getElementById('e-country').value  = card.dataset.country;
-  document.getElementById('e-summary').value  = detail.querySelector('.card-summary')?.textContent || '';
-  document.getElementById('e-review').value   = detail.querySelector('.card-review')?.textContent || '';
-  const meta = detail.querySelector('.card-meta')?.textContent || '';
-  const metaParts = meta.split('　/　');
-  document.getElementById('e-cast').value    = metaParts[0]?.trim() || '';
-  document.getElementById('e-year').value    = metaParts[1]?.trim() || '';
-  document.getElementById('e-station').value = metaParts[2]?.trim() || '';
-  // ジャンル
-  const tags = [...card.querySelectorAll('.card-bottom-row .tag')].map(t => t.textContent).join('、');
-  document.getElementById('e-genre').value = tags;
-  // 評価
-  const ratingNum = card.dataset.rating;
-  // 5項目スコアをカードのdatasetから読み込み
-  document.getElementById('e-score-story').value  = card.dataset.scoreStory  || '3';
-  document.getElementById('e-score-cast').value   = card.dataset.scoreCast   || '3';
-  document.getElementById('e-score-visual').value = card.dataset.scoreVisual || '3';
-  document.getElementById('e-score-music').value  = card.dataset.scoreMusic  || '3';
-  document.getElementById('e-score-sat').value    = card.dataset.scoreSat    || '3';
-  // 5項目スコアをカードのdatasetから読み込み
-  document.getElementById('e-score-story').value  = card.dataset.scoreStory  || '3';
-  document.getElementById('e-score-cast').value   = card.dataset.scoreCast   || '3';
-  document.getElementById('e-score-visual').value = card.dataset.scoreVisual || '3';
-  document.getElementById('e-score-music').value  = card.dataset.scoreMusic  || '3';
-  document.getElementById('e-score-sat').value    = card.dataset.scoreSat    || '3';
-  // 画像URL
-  const img = card.querySelector('.card-poster img');
-  document.getElementById('e-image').value = img ? img.src : '';
-  document.getElementById('e-theme').value = '';
+  const d = card.dataset;
+  // 全フィールドをdatasetから直接読み込み
+  document.getElementById('e-original-title').value = d.titleJp    || '';
+  document.getElementById('e-title').value           = d.titleJp    || '';
+  document.getElementById('e-country').value         = d.country    || '';
+  document.getElementById('e-summary').value         = d.summary    || '';
+  document.getElementById('e-genre').value           = d.genre      || '';
+  document.getElementById('e-cast').value            = d.cast       || '';
+  document.getElementById('e-theme').value           = d.theme      || '';
+  document.getElementById('e-station').value         = d.station    || '';
+  document.getElementById('e-year').value            = d.year       || '';
+  document.getElementById('e-day').value             = d.day        || '';
+  document.getElementById('e-image').value           = d.image      || '';
+  document.getElementById('e-review').value          = d.review     || '';
+  // 5項目スコア
+  document.getElementById('e-score-story').value  = d.scoreStory  || '3';
+  document.getElementById('e-score-cast').value   = d.scoreCast   || '3';
+  document.getElementById('e-score-visual').value = d.scoreVisual || '3';
+  document.getElementById('e-score-music').value  = d.scoreMusic  || '3';
+  document.getElementById('e-score-sat').value    = d.scoreSat    || '3';
   document.getElementById('edit-form-msg').textContent = '';
   document.getElementById('edit-modal-overlay').classList.add('open');
 }
@@ -1394,8 +1382,18 @@ function createCard(row) {
   card.dataset.country = finalC;
   card.dataset.rating  = rating;
   card.dataset.year    = parseInt(year) || 0;
-  card.dataset.decade  = getDecade(year);
-  card.dataset.titleJp = title;
+  card.dataset.decade    = getDecade(year);
+  card.dataset.titleJp   = title;
+  card.dataset.country   = country;
+  card.dataset.summary   = row[COL.summary]  || '';
+  card.dataset.genre     = genre;
+  card.dataset.cast      = row[COL.cast]     || '';
+  card.dataset.theme     = row[COL.theme]    || '';
+  card.dataset.station   = row[COL.station]  || '';
+  card.dataset.year      = year;
+  card.dataset.day       = row[COL.day]      || '';
+  card.dataset.review    = review;
+  card.dataset.image     = imgUrl;
   card.dataset.scoreStory  = scoreStory;
   card.dataset.scoreCast   = scoreCast;
   card.dataset.scoreVisual = scoreVisual;

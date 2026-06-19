@@ -569,7 +569,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   border-top: 0px solid var(--border);
 }
 .card-detail.open {
-  max-height: 1200px;
+  max-height: 1400px;
   border-top: 1px solid var(--border);
 }
 .radar-section {
@@ -1666,34 +1666,37 @@ function createCard(row) {
     </div>
     <div class="card-detail">
       <div class="card-detail-inner">
-        ${cast ? `<div class="card-meta"><span class="meta-label">出演者：</span>${esc(cast)}</div>` : ''}
-        ${theme ? `<div class="card-meta"><span class="meta-label">原作：</span>${esc(theme)}</div>` : ''}
-        ${(year||day||station||episodeTime) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}${episodeTime ? '　/　1話平均時間：約'+episodeTime+'分／話' : ''}</div>` : ''}
-        ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
-        ${review ? `<div class="card-divider"></div><div class="card-review">${esc(review)}</div>` : ''}
-        ${hasScores ? `
-        <div class="card-divider"></div>
-        <div class="radar-section">
-          <div class="radar-canvas-wrap">
-            <canvas class="radar-chart" width="140" height="140" aria-label="${esc(title)}のレーダーチャート"></canvas>
+        <div class="card-meta-block">
+          ${cast ? `<div class="card-meta"><span class="meta-label">出演者：</span>${esc(cast)}</div>` : ''}
+          ${theme ? `<div class="card-meta"><span class="meta-label">原作：</span>${esc(theme)}</div>` : ''}
+          ${(year||day||station||episodeTime) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}${episodeTime ? '　/　1話平均時間：約'+episodeTime+'分／話' : ''}</div>` : ''}
+        </div>
+        <div class="card-body-layout">
+          <div class="card-body-left">
+            ${summary ? `<div class="card-summary">${esc(summary)}</div>` : ''}
           </div>
-          <div class="radar-scores">
-            ${[['ストーリー',scoreStory],['キャスト',scoreCast],['映像美',scoreVisual],['音楽',scoreMusic],['満足度',scoreSat]].map(([lbl,val])=>`
-            <div class="radar-score-row">
-              <span class="radar-score-label">${lbl}</span>
-              <div class="radar-score-bar-wrap"><div class="radar-score-bar" style="width:${val*20}%"></div></div>
-              <span class="radar-score-val">${val}/5</span>
-            </div>`).join('')}
-          </div>
-        </div>` : ''}
-        ${rewatch ? `<div class="card-extra-badges">
-          ${rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>'}
-        </div>` : ''}
-        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          ${hasScores ? `
+          <div class="card-body-right">
+            <div class="radar-canvas-wrap">
+              <canvas class="radar-chart" width="160" height="160" aria-label="${esc(title)}のレーダーチャート"></canvas>
+            </div>
+            <div class="radar-scores">
+              ${[['ストーリー',scoreStory],['キャスト',scoreCast],['映像美',scoreVisual],['音楽',scoreMusic],['満足度',scoreSat]].map(([lbl,val])=>`
+              <div class="radar-score-row">
+                <span class="radar-score-label">${lbl}</span>
+                <div class="radar-score-bar-wrap"><div class="radar-score-bar" style="width:${val*20}%"></div></div>
+                <span class="radar-score-val">${val}/5</span>
+              </div>`).join('')}
+            </div>
+          </div>` : ''}
+        </div>
+        ${review ? `<div class="card-review">${esc(review)}</div>` : ''}
+        <div class="card-bottom-action">
           <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-icon">♡</span>
             <span class="like-count">0</span>
           </button>
+          ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}
           <button class="edit-btn" onclick="openEditModal(this)">✏️ 編集</button>
         </div>
       </div>

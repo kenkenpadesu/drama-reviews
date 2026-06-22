@@ -603,23 +603,24 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   gap: 6px;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.1);
-  color: #666;
+  color: #555;
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 20px;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
   margin-top: 4px;
 }
+.like-btn:hover { border-color: #6a9fd8; color: #6a9fd8; }
 .like-btn:hover {
   border-color: #e05a7a;
   color: #e05a7a;
 }
 .like-btn.liked {
-  background: rgba(224,90,122,0.12);
-  border-color: #e05a7a;
-  color: #e05a7a;
+  background: rgba(106,159,216,0.1);
+  border-color: #6a9fd8;
+  color: #6a9fd8;
 }
 .like-btn .like-icon { font-size: 14px; }
 .like-btn .like-count { font-weight: 700; }
@@ -1081,24 +1082,6 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <label><input type="checkbox" value="その他"> その他</label>
     </div>
     </div>
-  <div class="filter-section">
-    <div class="filter-section-title">ジャンルで絞り込み</div>
-    <div class="filter-options" id="genre-filter">
-      <label><input type="checkbox" value="all" checked> すべてのジャンル</label>
-      <label><input type="checkbox" value="ロマンス"> ロマンス</label>
-      <label><input type="checkbox" value="ヒューマン"> ヒューマン</label>
-      <label><input type="checkbox" value="サスペンス・ミステリー"> サスペンス・ミステリー</label>
-      <label><input type="checkbox" value="刑事・警察・法廷"> 刑事・警察・法廷</label>
-      <label><input type="checkbox" value="コメディ"> コメディ</label>
-      <label><input type="checkbox" value="医療"> 医療</label>
-      <label><input type="checkbox" value="青春・学園"> 青春・学園</label>
-      <label><input type="checkbox" value="社会派"> 社会派</label>
-      <label><input type="checkbox" value="アクション・復讐"> アクション・復讐</label>
-      <label><input type="checkbox" value="ファンタジー・SF"> ファンタジー・SF</label>
-      <label><input type="checkbox" value="スポーツ"> スポーツ</label>
-      <label><input type="checkbox" value="グルメ・お仕事"> グルメ・お仕事</label>
-    </div>
-  </div>
 </div>
 
 <div class="rating-legend">
@@ -1541,7 +1524,7 @@ async function handleLike(btn) {
     const data = await res.json();
     if (data.success) {
       btn.querySelector('.like-count').textContent = data.likes;
-      btn.querySelector('.like-icon').textContent = '♥';
+      btn.querySelector('.like-label').textContent = ' 未視聴済み';
       btn.classList.add('liked');
       btn.classList.remove('loading');
       likedTitles.add(title);
@@ -1856,9 +1839,8 @@ function createCard(row) {
         </div>
         ${review ? `<div class="card-review">${esc(review)}</div>` : ''}
         <div class="card-bottom-action">
-          <button class="like-btn" data-title="${esc(title)}" onclick="handleLike(this)">
-            <span class="like-icon">♡</span>
-            <span class="like-count">0</span>
+          <button class="like-btn" title="未視聴" data-title="${esc(title)}" onclick="handleLike(this)">
+            <span class="like-count">0</span><span class="like-label"> 未視聴</span>
           </button>
           ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}
           <div class="vote-section" data-title="${esc(title)}">

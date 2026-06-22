@@ -734,11 +734,11 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 /* またみたいバッジ：ジャンルタグと同スタイル */
 .extra-badge {
-  font-size: 11px;
+  font-size: 10px;
   background: transparent;
   border: 1px solid rgba(255,255,255,0.15);
   border-radius: 4px;
-  padding: 2px 8px;
+  padding: 1px 6px;
   letter-spacing: 0.02em;
 }
 .extra-badge.rewatch-yes { color: var(--gold); border-color: rgba(201,168,76,0.5); }
@@ -1902,7 +1902,7 @@ function createCard(row) {
         ${tags.length ? `<div class="tags card-tags-title">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="card-bottom-row">
           <div class="card-ratings-row">
-            <div class="rating-item"><span class="rating-owner-label">けんけんぱ</span><div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}</span></div></div>
+            <div class="rating-item"><span class="rating-owner-label">けんけんぱ</span><div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}</span></div>${rewatch ? `<span class="extra-badge ${rewatch === 'またみたい' ? 'rewatch-yes' : 'rewatch-no'}">${rewatch}</span>` : ''}</div>
             <div class="rating-item user-rating-inline" data-vavg="${vAvg}" data-vtotal="${vTotal}"><span class="user-rating-label">みんな</span><span class="user-stars-wrap">${vAvg > 0 ? renderStars(Math.round(vAvg)) : '─'}</span><span class="user-rating-num">${vAvg > 0 ? vAvg.toFixed(1) : ''}</span><span class="user-rating-count">${vAvg > 0 ? `(${vTotal}票)` : '未投票'}</span></div>
           </div>
           ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
@@ -1942,7 +1942,6 @@ function createCard(row) {
           <button class="like-btn" title="未視聴（押すと設定／もう一度押すと解除）" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-count">0</span><span class="like-label"> 未視聴</span>
           </button>
-          ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}
           <div class="vote-section" data-title="${esc(title)}">
             <span class="vote-label">あなたの評価：</span>
             ${[1,2,3,4,5].map(s=>`<button class="vote-star-btn" data-score="${s}" onclick="selectVoteStar(this)">★</button>`).join('')}

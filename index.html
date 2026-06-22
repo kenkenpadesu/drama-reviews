@@ -1514,22 +1514,29 @@ function restoreVotes() {
 
 async function handleLike(btn) {
   const title = btn.dataset.title;
-  if (btn.classList.contains('liked')) return;
+  const isLiked = btn.classList.contains('liked');
   btn.classList.add('loading');
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ type: 'like', title }),
+      body: JSON.stringify({ type: 'like', title, cancel: isLiked }),
     });
     const data = await res.json();
     if (data.success) {
       btn.querySelector('.like-count').textContent = data.likes;
-      btn.querySelector('.like-label').textContent = ' 未視聴済み';
-      btn.classList.add('liked');
+      if (isLiked) {
+        // 解除
+        btn.querySelector('.like-label').textContent = ' 未視聴';
+        btn.classList.remove('liked');
+        likedTitles.delete(title);
+      } else {
+        // 設定
+        btn.querySelector('.like-label').textContent = ' 未視聴設定済';
+        btn.classList.add('liked');
+        likedTitles.add(title);
+      }
       btn.classList.remove('loading');
-      likedTitles.add(title);
       localStorage.setItem('likedTitles', JSON.stringify([...likedTitles]));
-      // GA4イベント送信
       gtag('event', 'like', { drama_title: title });
     }
   } catch(e) {
@@ -1749,11 +1756,21 @@ function createCard(row) {
   const imgUrl      = row[COL.image]       || '';
   const episodeTime = parseInt(row[COL.episodeTime]) || 0;
   const rewatch     = row[COL.rewatch]     || '';
-  // みんなの評価
+  // みんなの評価（GASから dramas配列で来る場合）
   let vAvg = 0, vTotal = 0;
   try {
     const vd = row[COL.votes];
-    if (vd && typeof vd === 'object') { vAvg = vd.vAvg || 0; vTotal = vd.vTotal || 0; }
+    if (vd && typeof vd === 'object') {
+      // doGetで集計済みのvAvg/vTotalが直接ある場合
+      if (vd.vAvg !== undefined) { vAvg = vd.vAvg; vTotal = vd.vTotal; }
+      else {
+        // votesオブジェクト {1:n, 2:n ...} から計算
+        const total = Object.values(vd).reduce((a,b) => a + parseInt(b||0), 0);
+        const sum   = Object.entries(vd).reduce((a,[k,v]) => a + parseInt(k)*parseInt(v||0), 0);
+        vAvg   = total > 0 ? Math.round(sum / total * 10) / 10 : 0;
+        vTotal = total;
+      }
+    }
   } catch(e) {}
   const theme     = row[COL.theme]   || '';
   const finalC   = ['日本','韓国','アメリカ'].includes(country) ? country : 'その他';
@@ -1839,7 +1856,7 @@ function createCard(row) {
         </div>
         ${review ? `<div class="card-review">${esc(review)}</div>` : ''}
         <div class="card-bottom-action">
-          <button class="like-btn" title="未視聴" data-title="${esc(title)}" onclick="handleLike(this)">
+          <button class="like-btn" title="未視聴（押すと設定／もう一度押すと解除）" data-title="${esc(title)}" onclick="handleLike(this)">
             <span class="like-count">0</span><span class="like-label"> 未視聴</span>
           </button>
           ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}

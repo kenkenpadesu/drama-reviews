@@ -772,6 +772,42 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 .vote-star-btn.voted   { color: var(--gold); cursor: default; }
 .vote-section.done .vote-star-btn { cursor: default; }
 .vote-result { font-size: 11px; color: #666; margin-left: 4px; white-space: nowrap; }
+
+/* ヘッダーの評価2行レイアウト */
+.card-ratings-row {
+  display: flex; flex-direction: column; gap: 2px; margin-top: 2px;
+}
+.rating-item {
+  display: flex; align-items: center; gap: 6px;
+}
+.rating-owner-label {
+  font-size: 10px; color: #555; min-width: 52px;
+}
+.user-rating-label {
+  font-size: 10px; color: #555; min-width: 52px;
+}
+.user-stars-wrap { font-size: 12px; color: #888; }
+.user-rating-num { font-size: 12px; color: #888; }
+.user-rating-count { font-size: 10px; color: #444; }
+
+/* 投票ボタン */
+.vote-submit-btn {
+  background: var(--gold);
+  color: #111;
+  border: none;
+  border-radius: 4px;
+  padding: 3px 12px;
+  font-size: 11px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  margin-left: 4px;
+}
+.vote-submit-btn:disabled {
+  background: #333; color: #555; cursor: default;
+}
+.vote-submit-btn:not(:disabled):hover { opacity: 0.85; }
 </style>
 </head>
 <body>
@@ -1447,24 +1483,27 @@ async function loadLikes() {
 
 
 // みんなの評価 投票
-async function handleVote(btn) {
+// 星を選ぶだけ（まだ送信しない）
+function selectVoteStar(btn) {
   const section = btn.closest('.vote-section');
-  if (section.classList.contains('done')) return;
-  const title = section.dataset.title;
   const score = parseInt(btn.dataset.score);
-
-  // localStorage確認
-  const key = 'voted_' + title;
-  if (localStorage.getItem(key)) {
-    section.querySelector('.vote-result').textContent = '投票済みです';
-    return;
-  }
-
-  // ホバー演出
-  section.classList.add('done');
+  section.dataset.selectedScore = score;
   [...section.querySelectorAll('.vote-star-btn')].forEach(b => {
     b.classList.toggle('voted', parseInt(b.dataset.score) <= score);
   });
+  section.querySelector('.vote-submit-btn').disabled = false;
+}
+
+// 「投票する」ボタンで確定送信
+async function submitVote(btn) {
+  const section = btn.closest('.vote-section');
+  const title = section.dataset.title;
+  const score = parseInt(section.dataset.selectedScore);
+  if (!score) return;
+
+  btn.disabled = true;
+  btn.textContent = '送信中...';
+  section.querySelector('.vote-result').textContent = '';
 
   try {
     const res = await fetch(GAS_URL, {
@@ -1473,44 +1512,30 @@ async function handleVote(btn) {
     });
     const data = await res.json();
     if (data.success) {
-      localStorage.setItem(key, score);
+      btn.textContent = '投票済み';
       section.querySelector('.vote-result').textContent =
         `平均 ${data.avg.toFixed(1)} (${data.total}票)`;
-      // ヘッダーのみんな評価も更新
       const card = section.closest('.drama-card');
       updateUserRatingDisplay(card, data.avg, data.total);
     }
   } catch(e) {
-    section.classList.remove('done');
+    btn.disabled = false;
+    btn.textContent = '投票する';
     section.querySelector('.vote-result').textContent = 'エラー';
   }
 }
 
 function updateUserRatingDisplay(card, avg, total) {
-  // すでにある場合は更新、なければ挿入
-  let el = card.querySelector('.user-rating-inline');
-  const starsWrap = card.querySelector('.stars');
-  if (!starsWrap) return;
+  const el = card.querySelector('.user-rating-inline');
+  if (!el) return;
   const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
-  const html = `<div class="user-rating-inline"><span class="user-rating-label">みんな</span><span class="stars-wrap">${stars}</span><span class="user-rating-num">${avg.toFixed(1)}</span><span class="user-rating-count">(${total}票)</span></div>`;
-  if (el) { el.outerHTML = html; }
-  else { starsWrap.insertAdjacentHTML('afterend', html); }
+  el.querySelector('.user-stars-wrap').innerHTML = stars;
+  el.querySelector('.user-rating-num').textContent = avg.toFixed(1);
+  el.querySelector('.user-rating-count').textContent = `(${total}票)`;
 }
 
-// 投票済みの復元
-function restoreVotes() {
-  document.querySelectorAll('.vote-section').forEach(section => {
-    const title = section.dataset.title;
-    const voted = localStorage.getItem('voted_' + title);
-    if (!voted) return;
-    section.classList.add('done');
-    const score = parseInt(voted);
-    [...section.querySelectorAll('.vote-star-btn')].forEach(b => {
-      b.classList.toggle('voted', parseInt(b.dataset.score) <= score);
-    });
-    section.querySelector('.vote-result').textContent = '投票済み';
-  });
-}
+// 投票済み復元（制限なしモードのため何もしない）
+function restoreVotes() {}
 
 async function handleLike(btn) {
   const title = btn.dataset.title;
@@ -1821,8 +1846,10 @@ function createCard(row) {
           <span class="country-badge ${getBadgeClass(country)}">${getBadgeLabel(country)}</span>
         </div>
         <div class="card-bottom-row">
-          <div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}/5</span></div>
-          ${vAvg > 0 ? `<div class="user-rating-inline"><span class="user-rating-label">みんな</span>${renderStars(Math.round(vAvg))}<span class="user-rating-num">${vAvg.toFixed(1)}</span><span class="user-rating-count">(${vTotal}票)</span></div>` : ''}
+          <div class="card-ratings-row">
+            <div class="rating-item"><span class="rating-owner-label">けんけんぱ</span><div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}</span></div></div>
+            <div class="rating-item user-rating-inline" data-vavg="${vAvg}" data-vtotal="${vTotal}"><span class="user-rating-label">みんな</span><span class="user-stars-wrap">${vAvg > 0 ? renderStars(Math.round(vAvg)) : '─'}</span><span class="user-rating-num">${vAvg > 0 ? vAvg.toFixed(1) : ''}</span><span class="user-rating-count">${vAvg > 0 ? `(${vTotal}票)` : '未投票'}</span></div>
+          </div>
           ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         </div>
       </div>
@@ -1862,7 +1889,8 @@ function createCard(row) {
           ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}
           <div class="vote-section" data-title="${esc(title)}">
             <span class="vote-label">あなたの評価：</span>
-            ${[1,2,3,4,5].map(s=>`<button class="vote-star-btn" data-score="${s}" onclick="handleVote(this)">★</button>`).join('')}
+            ${[1,2,3,4,5].map(s=>`<button class="vote-star-btn" data-score="${s}" onclick="selectVoteStar(this)">★</button>`).join('')}
+            <button class="vote-submit-btn" onclick="submitVote(this)" disabled>投票する</button>
             <span class="vote-result"></span>
           </div>
           <button class="edit-btn" onclick="openEditModal(this)">✏️ 編集</button>

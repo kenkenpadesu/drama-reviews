@@ -742,6 +742,35 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 }
 .extra-badge.rewatch-yes { color: var(--gold); border-color: rgba(201,168,76,0.5); }
 .extra-badge.rewatch-no  { color: #666; border-color: rgba(255,255,255,0.12); }
+
+/* みんなの評価 ヘッダー表示 */
+.user-rating-inline {
+  display: flex; align-items: center; gap: 4px;
+  margin-top: 2px;
+}
+.user-rating-label {
+  font-size: 10px; color: #555; margin-right: 2px;
+}
+.user-rating-inline .stars-wrap { font-size: 11px; color: #888; }
+.user-rating-num { font-size: 12px; color: #888; }
+.user-rating-count { font-size: 10px; color: #444; }
+
+/* 投票UI */
+.vote-section {
+  display: flex; align-items: center; gap: 4px; margin-left: 8px;
+}
+.vote-label { font-size: 11px; color: #555; white-space: nowrap; }
+.vote-star-btn {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: #333; padding: 2px;
+  transition: color 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.vote-star-btn:hover,
+.vote-star-btn.hovered { color: var(--gold); transform: scale(1.2); }
+.vote-star-btn.voted   { color: var(--gold); cursor: default; }
+.vote-section.done .vote-star-btn { cursor: default; }
+.vote-result { font-size: 11px; color: #666; margin-left: 4px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -1433,6 +1462,73 @@ async function loadLikes() {
   }
 }
 
+
+// みんなの評価 投票
+async function handleVote(btn) {
+  const section = btn.closest('.vote-section');
+  if (section.classList.contains('done')) return;
+  const title = section.dataset.title;
+  const score = parseInt(btn.dataset.score);
+
+  // localStorage確認
+  const key = 'voted_' + title;
+  if (localStorage.getItem(key)) {
+    section.querySelector('.vote-result').textContent = '投票済みです';
+    return;
+  }
+
+  // ホバー演出
+  section.classList.add('done');
+  [...section.querySelectorAll('.vote-star-btn')].forEach(b => {
+    b.classList.toggle('voted', parseInt(b.dataset.score) <= score);
+  });
+
+  try {
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({ type: 'vote', title, score }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem(key, score);
+      section.querySelector('.vote-result').textContent =
+        `平均 ${data.avg.toFixed(1)} (${data.total}票)`;
+      // ヘッダーのみんな評価も更新
+      const card = section.closest('.drama-card');
+      updateUserRatingDisplay(card, data.avg, data.total);
+    }
+  } catch(e) {
+    section.classList.remove('done');
+    section.querySelector('.vote-result').textContent = 'エラー';
+  }
+}
+
+function updateUserRatingDisplay(card, avg, total) {
+  // すでにある場合は更新、なければ挿入
+  let el = card.querySelector('.user-rating-inline');
+  const starsWrap = card.querySelector('.stars');
+  if (!starsWrap) return;
+  const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
+  const html = `<div class="user-rating-inline"><span class="user-rating-label">みんな</span><span class="stars-wrap">${stars}</span><span class="user-rating-num">${avg.toFixed(1)}</span><span class="user-rating-count">(${total}票)</span></div>`;
+  if (el) { el.outerHTML = html; }
+  else { starsWrap.insertAdjacentHTML('afterend', html); }
+}
+
+// 投票済みの復元
+function restoreVotes() {
+  document.querySelectorAll('.vote-section').forEach(section => {
+    const title = section.dataset.title;
+    const voted = localStorage.getItem('voted_' + title);
+    if (!voted) return;
+    section.classList.add('done');
+    const score = parseInt(voted);
+    [...section.querySelectorAll('.vote-star-btn')].forEach(b => {
+      b.classList.toggle('voted', parseInt(b.dataset.score) <= score);
+    });
+    section.querySelector('.vote-result').textContent = '投票済み';
+  });
+}
+
 async function handleLike(btn) {
   const title = btn.dataset.title;
   if (btn.classList.contains('liked')) return;
@@ -1511,6 +1607,7 @@ function toggleCard(header) {
   if (detail.classList.contains('open')) {
     const card = header.closest('.drama-card');
     drawRadarChart(card);
+    setTimeout(restoreVotes, 50);
   }
 }
 
@@ -1567,7 +1664,7 @@ const GENRES = [
   'アクション・復讐', 'ファンタジー・SF', 'スポーツ', 'グルメ・お仕事'
 ];
 
-const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19 };
+const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19, votes:20 };
 
 let allCards = [];
 let currentCountryFilter = 'all';
@@ -1669,6 +1766,12 @@ function createCard(row) {
   const imgUrl      = row[COL.image]       || '';
   const episodeTime = parseInt(row[COL.episodeTime]) || 0;
   const rewatch     = row[COL.rewatch]     || '';
+  // みんなの評価
+  let vAvg = 0, vTotal = 0;
+  try {
+    const vd = row[COL.votes];
+    if (vd && typeof vd === 'object') { vAvg = vd.vAvg || 0; vTotal = vd.vTotal || 0; }
+  } catch(e) {}
   const theme     = row[COL.theme]   || '';
   const finalC   = ['日本','韓国','アメリカ'].includes(country) ? country : 'その他';
 
@@ -1696,6 +1799,8 @@ function createCard(row) {
   card.dataset.scoreSat     = scoreSat;
   card.dataset.episodeTime  = episodeTime;
   card.dataset.rewatch      = rewatch;
+  card.dataset.vAvg         = vAvg;
+  card.dataset.vTotal       = vTotal;
 
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
   const emoji = getEmoji(country);
@@ -1717,6 +1822,7 @@ function createCard(row) {
         </div>
         <div class="card-bottom-row">
           <div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}/5</span></div>
+          ${vAvg > 0 ? `<div class="user-rating-inline"><span class="user-rating-label">みんな</span>${renderStars(Math.round(vAvg))}<span class="user-rating-num">${vAvg.toFixed(1)}</span><span class="user-rating-count">(${vTotal}票)</span></div>` : ''}
           ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         </div>
       </div>
@@ -1755,6 +1861,11 @@ function createCard(row) {
             <span class="like-count">0</span>
           </button>
           ${rewatch ? (rewatch === 'またみたい' ? '<span class="extra-badge rewatch-yes">またみたい</span>' : '<span class="extra-badge rewatch-no">1回でいい</span>') : ''}
+          <div class="vote-section" data-title="${esc(title)}">
+            <span class="vote-label">あなたの評価：</span>
+            ${[1,2,3,4,5].map(s=>`<button class="vote-star-btn" data-score="${s}" onclick="handleVote(this)">★</button>`).join('')}
+            <span class="vote-result"></span>
+          </div>
           <button class="edit-btn" onclick="openEditModal(this)">✏️ 編集</button>
         </div>
       </div>
@@ -1805,6 +1916,7 @@ function applyFiltersAndSort() {
   document.getElementById('result-count').textContent = `${visible.length}作品`;
   // 展開済みカードのレーダーを再描画
   setTimeout(drawAllRadarCharts, 0);
+  setTimeout(restoreVotes, 50);
 }
 
 function setupCheckboxGroup(groupEl) {

@@ -808,6 +808,20 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   background: #333; color: #555; cursor: default;
 }
 .vote-submit-btn:not(:disabled):hover { opacity: 0.85; }
+
+/* 配信サービスバッジ */
+.streaming-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.streaming-badge {
+  font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+.streaming-badge.streaming-Netflix               { background: #E50914; color: #fff; }
+.streaming-badge.streaming-Amazon_Prime_Video    { background: #00A8E0; color: #fff; }
+.streaming-badge.streaming-U-NEXT                { background: #000; color: #fff; border: 1px solid #333; }
+.streaming-badge.streaming-Hulu                  { background: #1CE783; color: #000; }
+.streaming-badge.streaming-FOD                   { background: #FF4B00; color: #fff; }
+.streaming-badge.streaming-NHKオンデマンド       { background: #004B9C; color: #fff; }
 </style>
 </head>
 <body>
@@ -922,6 +936,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
           <option value="1回でいい">1回でいい</option>
         </select>
       </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">配信サービス（複数選択可）</label>
+      <div class="genre-grid" id="e-streaming-grid"></div>
     </div>
     <div class="form-group">
       <label class="form-label">画像URL</label>
@@ -1054,6 +1072,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
             <option value="1回でいい">1回でいい</option>
           </select>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">配信サービス（複数選択可）</label>
+        <div class="genre-grid" id="f-streaming-grid"></div>
       </div>
       <div class="form-group">
         <label class="form-label">画像URL</label>
@@ -1199,6 +1221,9 @@ function openEditModal(btn) {
   // ジャンルグリッドを現在値で初期化
   const currentGenres = (d.genre || '').split(/[、,，]/).map(g => g.trim()).filter(Boolean);
   buildGenreGrid('e-genre-grid', currentGenres);
+  // 配信サービスを復元
+  const currentStreaming = (d.streaming || '').split(/[、,，]/).map(s => s.trim()).filter(Boolean);
+  buildStreamingGrid('e-streaming-grid', currentStreaming);
   document.getElementById('e-cast').value            = d.cast       || '';
   document.getElementById('e-theme').value           = d.theme      || '';
   document.getElementById('e-station').value         = d.station    || '';
@@ -1243,7 +1268,8 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
     title,
     country:  document.getElementById('e-country').value,
     summary:  document.getElementById('e-summary').value.trim(),
-    genre:    getGenreValues('e-genre-grid').join('、'),
+    genre:      getGenreValues('e-genre-grid').join('、'),
+    streaming:  getGenreValues('e-streaming-grid').join('、'),
     cast:     document.getElementById('e-cast').value.trim(),
     theme:    document.getElementById('e-theme').value.trim(),
     station:  document.getElementById('e-station').value.trim(),
@@ -1402,7 +1428,8 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     title,
     country:  document.getElementById('f-country').value,
     summary:  document.getElementById('f-summary').value.trim(),
-    genre:    getGenreValues('f-genre-grid').join('、'),
+    genre:      getGenreValues('f-genre-grid').join('、'),
+    streaming:  getGenreValues('f-streaming-grid').join('、'),
     cast:     document.getElementById('f-cast').value.trim(),
     theme:    document.getElementById('f-theme').value.trim(),
     station:  document.getElementById('f-station').value.trim(),
@@ -1430,6 +1457,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
       document.getElementById('f-rewatch').value = '';
       ['f-score-story','f-score-cast','f-score-visual','f-score-music','f-score-sat'].forEach(id => { document.getElementById(id).value = '3'; });
       buildGenreGrid('f-genre-grid');
+      buildStreamingGrid('f-streaming-grid');
     } else {
       throw new Error(data.error || '失敗');
     }
@@ -1593,17 +1621,22 @@ function buildCountryChips() {
 }
 
 
-// ジャンルグリッドを初期化
-function buildGenreGrid(containerId, selectedGenres = []) {
+// ジャンル・配信サービスグリッドを初期化
+function buildGenreGrid(containerId, selectedGenres = [], items = null) {
   const wrap = document.getElementById(containerId);
   if (!wrap) return;
-  wrap.innerHTML = GENRES.map(g => {
+  const list = items || GENRES;
+  wrap.innerHTML = list.map(g => {
     const checked = selectedGenres.includes(g) ? ' checked' : '';
     const cls = selectedGenres.includes(g) ? ' checked' : '';
     return `<label class="genre-check-label${cls}">
       <input type="checkbox" value="${g}"${checked} onchange="toggleGenreLabel(this)"> ${g}
     </label>`;
   }).join('');
+}
+
+function buildStreamingGrid(containerId, selected = []) {
+  buildGenreGrid(containerId, selected, STREAMING_SERVICES);
 }
 
 function toggleGenreLabel(cb) {
@@ -1679,7 +1712,11 @@ const GENRES = [
   'アクション・復讐', 'ファンタジー・SF', 'スポーツ', 'グルメ・お仕事'
 ];
 
-const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19, votes:20 };
+const STREAMING_SERVICES = [
+  'Netflix', 'Amazon Prime Video', 'U-NEXT', 'Hulu', 'FOD', 'NHKオンデマンド'
+];
+
+const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19, votes:20, streaming:21 };
 
 let allCards = [];
 let currentCountryFilter = 'all';
@@ -1781,6 +1818,7 @@ function createCard(row) {
   const imgUrl      = row[COL.image]       || '';
   const episodeTime = parseInt(row[COL.episodeTime]) || 0;
   const rewatch     = row[COL.rewatch]     || '';
+  const streaming   = row[COL.streaming]   || '';
   // みんなの評価（GASから dramas配列で来る場合）
   let vAvg = 0, vTotal = 0;
   try {
@@ -1824,6 +1862,7 @@ function createCard(row) {
   card.dataset.scoreSat     = scoreSat;
   card.dataset.episodeTime  = episodeTime;
   card.dataset.rewatch      = rewatch;
+  card.dataset.streaming    = row[COL.streaming] || '';
   card.dataset.vAvg         = vAvg;
   card.dataset.vTotal       = vTotal;
 
@@ -1861,6 +1900,7 @@ function createCard(row) {
           ${cast ? `<div class="card-meta"><span class="meta-label">出演者：</span>${esc(cast)}</div>` : ''}
           ${theme ? `<div class="card-meta"><span class="meta-label">原作：</span>${esc(theme)}</div>` : ''}
           ${(year||day||station||episodeTime) ? `<div class="card-meta">${[year,day].filter(Boolean).join(' / ')}${station ? '　/　'+esc(station) : ''}${episodeTime ? '　/　1話平均時間：約'+episodeTime+'分／話' : ''}</div>` : ''}
+        ${streaming ? `<div class="card-meta streaming-badges">${streaming.split(/[、,，]/).map(s=>s.trim()).filter(Boolean).map(s=>`<span class="streaming-badge streaming-${s.replace(/\s+/g,'_')}">${s}</span>`).join('')}</div>` : ''}
         </div>
         <div class="card-body-layout">
           <div class="card-body-left">
@@ -2018,6 +2058,8 @@ if (searchInput) {
 // ジャンルグリッド初期化（追加・編集フォーム）
 buildGenreGrid('f-genre-grid');
 buildGenreGrid('e-genre-grid');
+buildStreamingGrid('f-streaming-grid');
+buildStreamingGrid('e-streaming-grid');
 
   } catch (e) {
     document.getElementById('drama-list').innerHTML =

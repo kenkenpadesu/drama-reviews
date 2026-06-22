@@ -585,14 +585,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 .score-grid .form-group { margin-bottom: 0; }
 .card-detail-inner {
-  padding: 12px 14px;
-  display: flex; flex-direction: column; gap: 8px;
+  padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 4px;
 }
 .card-meta { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
 .meta-label { color: #5a5a5a; }
 .card-summary { font-size: 12.5px; color: #777; line-height: 1.65; }
 .card-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.04); }
 .card-review {
+  margin-top: 4px;
   font-size: 12px; color: #aaa; line-height: 1.65;
   padding-left: 10px; border-left: 2px solid var(--gold-dim);
   font-style: italic;
@@ -628,6 +629,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 
 .card-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.04); }
 .card-review {
+  margin-top: 4px;
   font-size: 12px; color: #aaa; line-height: 1.65;
   padding-left: 10px; border-left: 2px solid var(--gold-dim);
   font-style: italic;
@@ -687,7 +689,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 }
 
 /* カード詳細 レイアウト */
-.card-meta-block { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.card-meta-block { display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px; }
 
 /* SP: 縦並び（デフォルト） */
 .card-body-layout {
@@ -710,7 +712,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .card-body-layout {
     flex-direction: row;
     align-items: center;
-    gap: 24px;
+    gap: 16px;
   }
   .card-body-left {
     flex: 1;
@@ -729,7 +731,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 }
 
 .card-bottom-action {
-  display: flex; gap: 10px; align-items: center; margin-top: 12px;
+  display: flex; gap: 10px; align-items: center; margin-top: 6px;
 }
 
 /* またみたいバッジ：ジャンルタグと同スタイル */
@@ -810,7 +812,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 .vote-submit-btn:not(:disabled):hover { opacity: 0.85; }
 
 /* 配信サービスバッジ */
-.streaming-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.streaming-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 2px; margin-bottom: 2px; }
 .streaming-badge {
   font-size: 10px; font-weight: 700;
   padding: 2px 8px; border-radius: 3px;

@@ -1553,7 +1553,7 @@ async function submitVote(btn) {
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ type: 'vote', title, score }),
+      body: JSON.stringify({ type: 'vote', title, score })
     });
     const data = await res.json();
     if (data.success) {
@@ -1733,7 +1733,7 @@ const STREAMING_SERVICES = [
   'Netflix', 'Amazon Prime Video', 'U-NEXT', 'Hulu', 'FOD', 'NHKオンデマンド'
 ];
 
-const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19, votes:20, streaming:21 };
+const COL = { title:0, country:1, summary:2, genre:3, cast:4, theme:5, station:6, year:7, day:8, rating:9, scoreStory:10, scoreCast:11, scoreVisual:12, scoreMusic:13, scoreSat:14, review:15, image:16, likes:17, episodeTime:18, rewatch:19, v1:20, v2:21, v3:22, v4:23, v5:24, streaming:25 };
 
 let allCards = [];
 let currentCountryFilter = 'all';
@@ -1836,22 +1836,15 @@ function createCard(row) {
   const episodeTime = parseInt(row[COL.episodeTime]) || 0;
   const rewatch     = row[COL.rewatch]     || '';
   const streaming   = row[COL.streaming]   || '';
-  // みんなの評価（GASから dramas配列で来る場合）
-  let vAvg = 0, vTotal = 0;
-  try {
-    const vd = row[COL.votes];
-    if (vd && typeof vd === 'object') {
-      // doGetで集計済みのvAvg/vTotalが直接ある場合
-      if (vd.vAvg !== undefined) { vAvg = vd.vAvg; vTotal = vd.vTotal; }
-      else {
-        // votesオブジェクト {1:n, 2:n ...} から計算
-        const total = Object.values(vd).reduce((a,b) => a + parseInt(b||0), 0);
-        const sum   = Object.entries(vd).reduce((a,[k,v]) => a + parseInt(k)*parseInt(v||0), 0);
-        vAvg   = total > 0 ? Math.round(sum / total * 10) / 10 : 0;
-        vTotal = total;
-      }
-    }
-  } catch(e) {}
+  // みんなの評価（U〜Y列の個別票数から計算）
+  const v1 = parseInt(row[COL.v1])||0;
+  const v2 = parseInt(row[COL.v2])||0;
+  const v3 = parseInt(row[COL.v3])||0;
+  const v4 = parseInt(row[COL.v4])||0;
+  const v5 = parseInt(row[COL.v5])||0;
+  const vTotal = v1+v2+v3+v4+v5;
+  const vSum   = v1*1+v2*2+v3*3+v4*4+v5*5;
+  const vAvg   = vTotal > 0 ? Math.round(vSum/vTotal*10)/10 : 0;
   const theme     = row[COL.theme]   || '';
   const finalC   = ['日本','韓国','アメリカ'].includes(country) ? country : 'その他';
 
@@ -1880,8 +1873,10 @@ function createCard(row) {
   card.dataset.episodeTime  = episodeTime;
   card.dataset.rewatch      = rewatch;
   card.dataset.streaming    = row[COL.streaming] || '';
-  card.dataset.vAvg         = vAvg;
-  card.dataset.vTotal       = vTotal;
+  card.dataset.vAvg   = vAvg;
+  card.dataset.vTotal = vTotal;
+  card.dataset.v1 = v1; card.dataset.v2 = v2; card.dataset.v3 = v3;
+  card.dataset.v4 = v4; card.dataset.v5 = v5;
 
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
   const emoji = getEmoji(country);

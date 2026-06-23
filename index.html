@@ -646,6 +646,59 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .no-results { text-align: center; padding: 4rem 2rem; color: var(--text-muted); font-size: 14px; }
 
+/* スケルトンスクリーン */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+.skeleton-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+.skeleton-poster {
+  width: 56px; height: 80px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.skeleton-body { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.skeleton-line {
+  height: 12px; border-radius: 4px;
+  background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.skeleton-line.w80 { width: 80%; }
+.skeleton-line.w55 { width: 55%; }
+.skeleton-line.w35 { width: 35%; }
+
+/* エラー表示 */
+.load-error {
+  text-align: center; padding: 4rem 2rem;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+.load-error-icon { font-size: 36px; }
+.load-error-msg  { font-size: 14px; color: #888; line-height: 1.7; }
+.load-error-retry {
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  padding: 0.5rem 1.4rem;
+  border-radius: 50px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  letter-spacing: 0.04em;
+}
+.load-error-retry:hover { background: var(--gold); color: var(--bg); }
+
 .search-and-controls {
   display: flex;
   align-items: center;
@@ -1185,10 +1238,12 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 </div>
   <div id="drama-list" class="drama-list">
-    <div class="status-msg">
-      <div class="spinner"></div>
-      データを読み込み中...
-    </div>
+    <!-- スケルトンカード（JS読み込み後に置き換わる） -->
+    <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w55"></div><div class="skeleton-line w35"></div></div></div>
+    <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w55"></div><div class="skeleton-line w80"></div><div class="skeleton-line w35"></div></div></div>
+    <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w35"></div><div class="skeleton-line w55"></div></div></div>
+    <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w35"></div><div class="skeleton-line w80"></div><div class="skeleton-line w55"></div></div></div>
+    <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w55"></div><div class="skeleton-line w35"></div></div></div>
   </div>
 </main>
 
@@ -2055,12 +2110,29 @@ setupCheckboxGroup(document.getElementById('country-filter'));
 setupCheckboxGroup(document.getElementById('rating-filter'));
 setupCheckboxGroup(document.getElementById('decade-filter'));
 
-(async () => {
+function showLoadError() {
+  const listEl = document.getElementById('drama-list');
+  listEl.innerHTML = `
+    <div class="load-error">
+      <div class="load-error-icon">⚠️</div>
+      <div class="load-error-msg">データの読み込みに失敗しました。<br>ネットワークを確認してもう一度お試しください。</div>
+      <button class="load-error-retry" onclick="location.reload()">再読み込み</button>
+    </div>`;
+}
+
+async function loadDramaData() {
+  const listEl = document.getElementById('drama-list');
   try {
-    const res  = await fetch(CSV_URL);
+    // 10秒でタイムアウト
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    const res  = await fetch(CSV_URL, { signal: controller.signal });
+    clearTimeout(timer);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
     const rows = parseCSV(text);
-    const listEl = document.getElementById('drama-list');
+
     listEl.innerHTML = '';
     if (rows.length === 0) {
       listEl.innerHTML = '<div class="no-results">レビューデータが見つかりませんでした。</div>';
@@ -2072,23 +2144,24 @@ setupCheckboxGroup(document.getElementById('decade-filter'));
     applyFiltersAndSort();
     loadLikes();
 
-// 検索BOX（既存のsearch-bar inputに接続）
-const searchInput = document.getElementById('search-input');
-if (searchInput) {
-  searchInput.addEventListener('input', () => { applyFiltersAndSort(); });
-}
+    // 検索BOX
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => { applyFiltersAndSort(); });
+    }
 
-// ジャンルグリッド初期化（追加・編集フォーム）
-buildGenreGrid('f-genre-grid');
-buildGenreGrid('e-genre-grid');
-buildStreamingGrid('f-streaming-grid');
-buildStreamingGrid('e-streaming-grid');
+    // ジャンルグリッド初期化（追加・編集フォーム）
+    buildGenreGrid('f-genre-grid');
+    buildGenreGrid('e-genre-grid');
+    buildStreamingGrid('f-streaming-grid');
+    buildStreamingGrid('e-streaming-grid');
 
   } catch (e) {
-    document.getElementById('drama-list').innerHTML =
-      '<div class="no-results">データの読み込みに失敗しました。しばらくしてから再読み込みしてください。</div>';
+    showLoadError();
   }
-})();
+}
+
+loadDramaData();
 </script>
 </body>
 </html>

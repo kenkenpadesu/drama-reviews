@@ -1218,13 +1218,23 @@ document.getElementById('year').textContent = new Date().getFullYear();
   }
 })();
 
-// URLパラメーターが ?admin=241024 のときだけ表示
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.get('admin') === '241024') {
-  document.getElementById('admin-button').style.display = 'block';
-  document.getElementById('delete-mode-button').style.display = 'block';
-  document.getElementById('drama-list').classList.add('admin-mode');
+// URLパラメーターが ?admin=<正しいPASS> のときだけ表示
+const ADMIN_HASH = 'ec1829d80064a29f33be190310a45cdf29350505e93cee5716e3f1aa48895e34';
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
 }
+const urlParams = new URLSearchParams(window.location.search);
+const _adminParam = urlParams.get('admin');
+let _adminUnlocked = false;
+(async () => {
+  if (_adminParam && await sha256(_adminParam) === ADMIN_HASH) {
+    _adminUnlocked = true;
+    document.getElementById('admin-button').style.display = 'block';
+    document.getElementById('delete-mode-button').style.display = 'block';
+    document.getElementById('drama-list').classList.add('admin-mode');
+  }
+})();
 
 // 編集モーダル
 function openEditModal(btn) {
@@ -1280,7 +1290,7 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
 
   const payload = {
     type: 'edit',
-    password: '241024',
+    password: ADMIN_HASH,
     originalTitle: document.getElementById('e-original-title').value,
     title,
     country:  document.getElementById('e-country').value,
@@ -1350,7 +1360,7 @@ document.getElementById('delete-cancel-btn').addEventListener('click', () => {
     c.classList.remove('selected');
     c.querySelector('input[type="checkbox"]').checked = false;
   });
-  if (urlParams.get('admin') === '241024') {
+  if (_adminUnlocked) {
     document.getElementById('admin-button').style.display = 'block';
     document.getElementById('delete-mode-button').style.display = 'block';
     document.getElementById('filter-button').style.display = 'block';
@@ -1371,7 +1381,7 @@ document.getElementById('delete-exec-btn').addEventListener('click', async () =>
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ type: 'delete', password: '241024', titles }),
+      body: JSON.stringify({ type: 'delete', password: ADMIN_HASH, titles }),
     });
     const data = await res.json();
     if (data.success) {
@@ -1418,9 +1428,10 @@ modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) clo
 document.getElementById('pw-enter').addEventListener('click', checkPassword);
 document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
 
-function checkPassword() {
+async function checkPassword() {
   const val = document.getElementById('pw-input').value;
-  if (val === '241024') {
+  const hash = await sha256(val);
+  if (hash === ADMIN_HASH) {
     pwScreen.style.display = 'none';
     addFormScreen.style.display = 'block';
     document.getElementById('form-msg').textContent = '';
@@ -1441,7 +1452,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
   btn.textContent = '送信中...';
   const payload = {
     type: 'add',
-    password: '241024',
+    password: ADMIN_HASH,
     title,
     country:  document.getElementById('f-country').value,
     summary:  document.getElementById('f-summary').value.trim(),

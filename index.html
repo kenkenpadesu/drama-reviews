@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js" defer></script>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NNT1Y6DFWF"></script>
 <script>
@@ -38,6 +38,14 @@
   --kr-badge-text: #c99888;
   --kr-badge-border: rgba(168,124,110,0.2);
 }
+/* P11改善: フォーカスリングをゴールドで統一 */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Noto Sans JP', sans-serif;
@@ -48,15 +56,26 @@ body {
   overflow-x: hidden;
 }
 .site-header {
-  padding: 3rem 2rem 2.5rem;
+  padding: 1.8rem 2rem 0;
   border-bottom: 1px solid rgba(255,255,255,0.06);
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.site-header-top {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  max-width: 1400px;
-  margin: 0 auto;
+  padding-bottom: 1rem;
+}
+.site-header-bottom {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  flex-wrap: wrap;
 }
 .eyebrow {
   font-size: 11px;
@@ -90,10 +109,10 @@ body {
   display: flex; align-items: center; gap: 5px;
 }
 .last-updated span { color: #6b5d3f; }
-.header-stats { display: flex; gap: 1.5rem; align-items: flex-end; }
-.stat { text-align: right; }
-.stat-num { font-size: 28px; font-weight: 700; color: var(--gold); line-height: 1; }
-.stat-label { font-size: 11px; color: #5a5a5a; margin-top: 3px; letter-spacing: 0.08em; }
+.header-stats { display: flex; gap: 1.5rem; align-items: center; }
+.stat { text-align: left; }
+.stat-num { font-size: 22px; font-weight: 700; color: var(--gold); line-height: 1; }
+.stat-label { font-size: 11px; color: #5a5a5a; margin-top: 2px; letter-spacing: 0.08em; }
 /* 検索BOX */
 .search-bar-wrap {
   position: static;
@@ -166,41 +185,78 @@ body {
 .genre-check-label:hover { border-color: var(--gold); color: var(--text); }
 .genre-check-label input { accent-color: var(--gold); margin: 0; }
 .genre-check-label.checked { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.08); }
+/* P10改善: フィルター・管理ボタンをインラインコントロールバーへ */
 .filter-button {
-  position: fixed;
-  top: 20px; right: 20px;
-  background: var(--gold);
-  color: var(--bg);
-  border: none;
-  padding: 0.7rem 1.4rem;
+  background: var(--surface);
+  color: var(--text-sub);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.45rem 1rem;
   font-weight: 700;
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  border-radius: 50px;
+  font-size: 12px;
+  border-radius: 6px;
   cursor: pointer;
-  z-index: 1000;
-  transition: background 0.2s, transform 0.2s;
+  transition: border-color 0.2s, color 0.2s;
   letter-spacing: 0.04em;
 }
-.filter-button:hover { background: #dfc06a; transform: translateY(-2px); }
+.filter-button:hover { border-color: var(--gold); color: var(--gold); }
+.filter-button.has-active { border-color: rgba(201,168,76,0.5); color: var(--gold); background: rgba(201,168,76,0.07); }
 .admin-button {
-  position: fixed;
-  top: 20px; right: 130px;
   background: transparent;
   color: #555;
   border: 1px solid #333;
-  padding: 0.7rem 1.4rem;
+  padding: 0.45rem 1rem;
   font-weight: 700;
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 13px;
-  border-radius: 50px;
+  font-size: 12px;
+  border-radius: 6px;
   cursor: pointer;
-  z-index: 1000;
   transition: all 0.2s;
   letter-spacing: 0.04em;
   display: none;
 }
 .admin-button:hover { border-color: var(--gold); color: var(--gold); }
+/* アクティブフィルタータグ（P03改善） */
+.active-filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  padding: 2px 8px 2px 10px;
+  border-radius: 20px;
+  background: rgba(201,168,76,0.12);
+  border: 1px solid rgba(201,168,76,0.3);
+  color: var(--gold);
+  cursor: default;
+}
+.active-filter-tag-close {
+  background: none;
+  border: none;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.active-filter-tag-close:hover { opacity: 1; }
+.filter-count-badge {
+  font-size: 9px;
+  background: var(--gold);
+  color: #0a0a0a;
+  border-radius: 10px;
+  padding: 0 5px;
+  font-weight: 700;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 .delete-bar {
   display: none;
   position: fixed;
@@ -448,10 +504,7 @@ body {
   background: rgba(201,168,76,0.05);
 }
 .controls {
-  max-width: 1400px; margin: 0 auto;
-  padding: 1.25rem 2rem;
   display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
 }
 .chip {
   font-size: 12px; padding: 5px 14px; border-radius: 20px;
@@ -497,6 +550,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   margin-bottom: 8px;
   transition: border-color 0.2s;
 }
+/* P02改善: 国別の左ボーダーアクセント */
+.drama-card[data-stripe="jp"] { border-left: 3px solid rgba(122,168,212,0.6); }
+.drama-card[data-stripe="kr"] { border-left: 3px solid rgba(201,152,136,0.6); }
+.drama-card[data-stripe="other"] { border-left: 3px solid rgba(120,120,120,0.3); }
 .drama-card:hover { border-color: rgba(201,168,76,0.3); }
 
 /* アコーディオンヘッダー */
@@ -531,7 +588,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   justify-content: space-between; gap: 8px; margin-bottom: 5px;
 }
 .drama-title {
-  font-size: 14px; font-weight: 700; color: var(--text);
+  font-size: 14px; font-weight: 500; color: var(--text);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   letter-spacing: -0.01em;
 }
@@ -543,10 +600,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .card-bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .stars { display: flex; gap: 1px; align-items: center; }
 .star-on  { font-size: 13px; color: var(--gold); }
-.star-off { font-size: 13px; color: #2a2a2a; }
+.star-off { font-size: 13px; color: #444; } /* P04改善: #2a2a2a→#444 コントラスト向上 */
 .rating-num { font-size: 11px; color: #555; margin-left: 4px; }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
-.tag { font-size: 10px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.07); color: #555; border-radius: 2px; letter-spacing: 0.03em; }
+.tag { font-size: 10px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.12); color: #888; border-radius: 3px; letter-spacing: 0.03em; background: rgba(255,255,255,0.03); } /* P05改善: タグ視認性向上 */
 
 .card-chevron {
   font-size: 11px; color: #555; flex-shrink: 0;
@@ -561,7 +618,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   border-top: 0px solid var(--border);
 }
 .card-detail.open {
-  max-height: 1400px;
+  max-height: 600px; /* P13改善: 1400px→600px 閉じる速度が自然に */
   border-top: 1px solid var(--border);
 }
 .radar-section {
@@ -571,9 +628,9 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .radar-scores { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px; }
 .radar-score-row { display: flex; align-items: center; justify-content: space-between; font-size: 11px; }
 .radar-score-label { color: #666; min-width: 48px; flex-shrink: 0; }
-.radar-score-bar-wrap { flex: 1; margin: 0 8px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
+.radar-score-bar-wrap { flex: 1; margin: 0 8px 0 8px; height: 3px; background: rgba(255,255,255,0.06); border-radius: 2px; }
 .radar-score-bar { height: 100%; border-radius: 2px; background: var(--gold); }
-.radar-score-val { color: #888; font-size: 10px; min-width: 20px; text-align: right; }
+.radar-score-val { color: #888; font-size: 10px; min-width: 28px; text-align: right; } /* P09改善: min-width拡大 */
 .score-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
 .score-grid .form-group { margin-bottom: 0; }
 .card-detail-inner {
@@ -582,11 +639,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 }
 .card-meta { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
 .meta-label { color: #5a5a5a; }
-.card-summary { font-size: 12.5px; color: #777; line-height: 1.65; }
+.card-summary { font-size: 13px; color: #777; line-height: 1.8; } /* P06改善: 12.5px/1.65→13px/1.8 */
 .card-divider { width: 100%; height: 1px; background: rgba(255,255,255,0.04); }
 .card-review {
   margin-top: 4px;
-  font-size: 12px; color: #aaa; line-height: 1.65;
+  font-size: 12.5px; color: #aaa; line-height: 1.8; /* P06改善: line-height 1.65→1.8 */
   padding-left: 10px; border-left: 2px solid var(--gold-dim);
   font-style: italic;
 }
@@ -599,8 +656,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   color: #555;
   font-family: 'Noto Sans JP', sans-serif;
   font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 5px 14px; /* P07改善: pill型にするため左右padding増 */
+  border-radius: 20px; /* P07改善: 4px→20px pill型 */
   cursor: pointer;
   transition: all 0.2s;
   margin-top: 4px;
@@ -668,16 +725,19 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 }
 .load-error-retry:hover { background: var(--gold); color: var(--bg); }
 
+/* P10改善: コントロールバー（フィルター・管理ボタンを統合） */
 .search-and-controls {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-  padding-left: 4px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.75rem 2rem 0;
 }
 .search-and-controls .controls {
-  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  padding-bottom: 0.75rem;
 }
 /* ジャンル選択チェックボックス（フォーム内） */
 .genre-grid {
@@ -704,7 +764,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 @media (max-width: 600px) {
   .site-header, .controls, main { padding-left: 1rem; padding-right: 1rem; }
   .site-title { font-size: 24px; }
-  .header-stats { display: none; }
+  .site-header-top { flex-direction: column; align-items: flex-start; gap: .5rem; }
+  .site-header-top .search-bar-wrap { width: 100%; align-self: auto; }
+  .site-header-bottom { gap: 1rem; }
+  .header-stats { gap: 1rem; }
   .card-poster { width: 100px; min-width: 100px; height: 100px; }
   .drama-title { font-size: 14px; }
   .filter-overlay { width: 100%; }
@@ -806,9 +869,13 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 }
 .rating-owner-label {
   font-size: 10px; color: #555; min-width: 52px;
+  text-align: right; /* P08改善: 右揃えで星が縦に整列 */
+  flex-shrink: 0;
 }
 .user-rating-label {
   font-size: 10px; color: #555; min-width: 52px;
+  text-align: right; /* P08改善: 右揃えで星が縦に整列 */
+  flex-shrink: 0;
 }
 .user-stars-wrap { font-size: 12px; color: #888; }
 .user-rating-num { font-size: 12px; color: #888; }
@@ -866,21 +933,26 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <body>
 
 <header class="site-header">
-  <div>
-    <div class="eyebrow">drama reviews</div>
-    <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
-    <div class="site-desc">私の個人的な感想と評価を記録する場所</div>
-    <div class="last-updated">最終更新：<span id="last-updated-html">読込中...</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
+  <div class="site-header-top">
+    <div>
+      <div class="eyebrow">drama reviews</div>
+      <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
+      <div class="site-desc">私の個人的な感想と評価を記録する場所</div>
+    </div>
+    <div class="search-bar-wrap" style="align-self:flex-end">
+      <span class="search-bar-icon">🔍</span>
+      <input type="text" class="search-bar" id="search-input" placeholder="検索...">
+      <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
+    </div>
   </div>
-  <div class="header-stats">
-    <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-label">作品</div></div>
-    <div class="stat"><div class="stat-num" id="avg-rating">—</div><div class="stat-label">平均評価</div></div>
+  <div class="site-header-bottom">
+    <div class="header-stats">
+      <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-label">作品</div></div>
+      <div class="stat"><div class="stat-num" id="avg-rating">—</div><div class="stat-label">平均評価</div></div>
+    </div>
+    <div class="last-updated" style="margin-left:auto">最終更新：<span id="last-updated-html">読込中...</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
   </div>
 </header>
-
-<button id="filter-button" class="filter-button">フィルター</button>
-<button id="admin-button" class="admin-button">＋ 追加</button>
-<button id="delete-mode-button" class="admin-button" style="right:220px">🗑 削除</button>
 
 <!-- 編集モーダル -->
 <div id="edit-modal-overlay" class="modal-overlay">
@@ -1210,17 +1282,18 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <main>
+<!-- P10改善: コントロールバーにフィルター・管理ボタンをインライン配置 -->
 <div class="search-and-controls">
-  <div class="search-bar-wrap">
-    <span class="search-bar-icon">🔍</span>
-    <input type="text" class="search-bar" id="search-input" placeholder="検索...">
-    <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
+  <div class="controls" style="flex-wrap:wrap; gap:6px; align-items:center; width:100%">
+    <button id="filter-button" class="filter-button">🔽 フィルター</button>
+    <button id="admin-button" class="admin-button">＋ 追加</button>
+    <button id="delete-mode-button" class="admin-button">🗑 削除</button>
+    <!-- P03改善: 適用中フィルタータグ表示エリア -->
+    <div id="active-filter-tags" class="active-filter-tags"></div>
+    <button class="chip active" data-filter="all">すべて</button>
+    <span id="country-chips"></span>
+    <span class="result-count" id="result-count"></span>
   </div>
-  <div class="controls">
-  <button class="chip active" data-filter="all">すべて</button>
-  <span id="country-chips"></span>
-  <span class="result-count" id="result-count"></span>
-</div>
 </div>
   <div id="drama-list" class="drama-list">
     <!-- スケルトンカード（JS読み込み後に置き換わる） -->
@@ -1270,8 +1343,8 @@ let _adminUnlocked = false;
 (async () => {
   if (_adminParam && await sha256(_adminParam) === ADMIN_HASH) {
     _adminUnlocked = true;
-    document.getElementById('admin-button').style.display = 'block';
-    document.getElementById('delete-mode-button').style.display = 'block';
+    document.getElementById('admin-button').style.display = 'inline-block';
+    document.getElementById('delete-mode-button').style.display = 'inline-block';
     document.getElementById('drama-list').classList.add('admin-mode');
   }
 })();
@@ -1397,7 +1470,7 @@ document.getElementById('delete-mode-button').addEventListener('click', () => {
   document.getElementById('delete-bar').classList.add('visible');
   document.getElementById('delete-mode-button').style.display = 'none';
   document.getElementById('admin-button').style.display = 'none';
-  document.getElementById('filter-button').style.display = 'none';
+  // P10改善: fixed→inlineになったのでfilter-buttonは非表示にしない
 });
 
 document.getElementById('delete-cancel-btn').addEventListener('click', () => {
@@ -1409,9 +1482,8 @@ document.getElementById('delete-cancel-btn').addEventListener('click', () => {
     c.querySelector('input[type="checkbox"]').checked = false;
   });
   if (_adminUnlocked) {
-    document.getElementById('admin-button').style.display = 'block';
-    document.getElementById('delete-mode-button').style.display = 'block';
-    document.getElementById('filter-button').style.display = 'block';
+    document.getElementById('admin-button').style.display = 'inline-block';
+    document.getElementById('delete-mode-button').style.display = 'inline-block';
     document.getElementById('drama-list').classList.add('admin-mode');
   }
 });
@@ -1905,6 +1977,7 @@ function createCard(row) {
 
   const card = document.createElement('div');
   card.className = 'drama-card';
+  card.dataset.stripe    = getStripeClass(country); // P02改善: 国別左ボーダー用
   card.dataset.rating    = rating;
   card.dataset.decade    = getDecade(year);
   card.dataset.titleJp   = title;
@@ -2054,9 +2127,64 @@ function applyFiltersAndSort() {
     visible.forEach(c => listEl.appendChild(c));
   }
   document.getElementById('result-count').textContent = `${visible.length}作品`;
+
+  // P03改善: 適用中フィルタータグを更新
+  renderActiveFilterTags(selC, selR, selD, selG, selS);
+
   // 展開済みカードのレーダーを再描画
   setTimeout(drawAllRadarCharts, 0);
   setTimeout(restoreVotes, 50);
+}
+
+// P03改善: アクティブフィルタータグ描画
+function renderActiveFilterTags(selC, selR, selD, selG, selS) {
+  const wrap = document.getElementById('active-filter-tags');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const filterBtn = document.getElementById('filter-button');
+
+  const allTags = [
+    ...selC.map(v => ({ label: v, group: 'country' })),
+    ...selR.map(v => ({ label: `★${v}`, group: 'rating' })),
+    ...selD.map(v => ({ label: `${v}年代`, group: 'decade' })),
+    ...selG.map(v => ({ label: v, group: 'genre' })),
+    ...selS.map(v => ({ label: v, group: 'streaming' })),
+  ];
+
+  allTags.forEach(({ label, group }) => {
+    const tag = document.createElement('span');
+    tag.className = 'active-filter-tag';
+    tag.innerHTML = `${esc(label)}<button class="active-filter-tag-close" aria-label="${esc(label)}を解除" onclick="clearFilterTag('${group}','${esc(label)}')">✕</button>`;
+    wrap.appendChild(tag);
+  });
+
+  // フィルターボタンにバッジ表示
+  const total = allTags.length;
+  if (filterBtn) {
+    filterBtn.innerHTML = total > 0
+      ? `🔽 フィルター<span class="filter-count-badge">${total}</span>`
+      : '🔽 フィルター';
+    filterBtn.classList.toggle('has-active', total > 0);
+  }
+}
+
+// P03改善: タグ✕クリックで該当フィルターを解除
+function clearFilterTag(group, label) {
+  const groupMap = {
+    country: '#country-filter', rating: '#rating-filter',
+    decade: '#decade-filter', genre: '#genre-filter', streaming: '#streaming-filter'
+  };
+  const groupEl = document.querySelector(groupMap[group]);
+  if (!groupEl) return;
+  const rawLabel = label.replace(/^★/, '').replace(/年代$/, '');
+  groupEl.querySelectorAll('input:not([value="all"])').forEach(cb => {
+    if (cb.value === rawLabel || `★${cb.value}` === label || `${cb.value}年代` === label) {
+      cb.checked = false;
+    }
+  });
+  const checked = groupEl.querySelectorAll('input:not([value="all"]):checked').length;
+  if (checked === 0) { const allCb = groupEl.querySelector('input[value="all"]'); if(allCb) allCb.checked = true; }
+  applyFiltersAndSort();
 }
 
 function setupCheckboxGroup(groupEl) {

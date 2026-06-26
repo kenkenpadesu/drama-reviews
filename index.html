@@ -1140,6 +1140,9 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <button class="sort-button" data-sort="year-asc">年代：古い順</button>
       <button class="sort-button" data-sort="rating-desc">評価：高い順</button>
       <button class="sort-button" data-sort="title-asc">タイトル：あいうえお順</button>
+      <!-- ★【改善】みんなの評価順ソートを追加 -->
+      <button class="sort-button" data-sort="vavg-desc">みんなの評価：高い順</button>
+      <button class="sort-button" data-sort="likes-desc">未視聴数：多い順</button>
     </div>
   </div>
   <div class="filter-section">
@@ -1179,6 +1182,19 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <label><input type="checkbox" value="その他"> その他</label>
     </div>
     </div>
+  <!-- ★【改善】配信サービスで絞り込みフィルターを追加 -->
+  <div class="filter-section">
+    <div class="filter-section-title">配信サービスで絞り込み</div>
+    <div class="filter-options" id="streaming-filter">
+      <label><input type="checkbox" value="all" checked> すべて</label>
+      <label><input type="checkbox" value="Netflix"> Netflix</label>
+      <label><input type="checkbox" value="Amazon Prime Video"> Amazon Prime Video</label>
+      <label><input type="checkbox" value="U-NEXT"> U-NEXT</label>
+      <label><input type="checkbox" value="Hulu"> Hulu</label>
+      <label><input type="checkbox" value="FOD"> FOD</label>
+      <label><input type="checkbox" value="NHKオンデマンド"> NHKオンデマンド</label>
+    </div>
+  </div>
 </div>
 
 <div class="rating-legend">
@@ -1309,6 +1325,13 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
     document.getElementById('edit-form-msg').className = 'form-msg error';
     return;
   }
+  // ★【改善】クライアントサイドで画像URLを事前バリデーション
+  const imageValE = document.getElementById('e-image').value.trim();
+  if (imageValE && !/^https?:\/\//i.test(imageValE)) {
+    document.getElementById('edit-form-msg').textContent = '画像URLはhttps://から始めてください';
+    document.getElementById('edit-form-msg').className = 'form-msg error';
+    return;
+  }
   const btn = document.getElementById('edit-form-submit');
   btn.disabled = true; btn.textContent = '保存中...';
 
@@ -1338,7 +1361,8 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
   };
 
   try {
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.success) {
       document.getElementById('edit-form-msg').textContent = '✅ 保存しました！ページを再読み込みすると反映されます。';
@@ -1405,8 +1429,10 @@ document.getElementById('delete-exec-btn').addEventListener('click', async () =>
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // ★【改善】Content-Type明示
       body: JSON.stringify({ type: 'delete', password: ADMIN_HASH, titles }),
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.success) {
       selected.forEach(c => {
@@ -1425,6 +1451,8 @@ document.getElementById('delete-exec-btn').addEventListener('click', async () =>
   btn.textContent = '削除する';
 });
 
+// ★【改善】GAS_URLを定数として先頭付近に移動（本来はスクリプト先頭で定義すべきだが、
+// このファイル構成上ここで宣言。他のfetch呼び出しより必ず前になるよう配置）
 const GAS_URL = 'https://script.google.com/macros/s/AKfycby8F8Ug8gBDkcfqMxlVaMFmCWNxK6FJtwo6VAxZ4nrbyaThwQRu2pNq1h2LrYsKY2QZ/exec';
 
 // 管理者モーダル
@@ -1470,6 +1498,13 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     document.getElementById('form-msg').className = 'form-msg error';
     return;
   }
+  // ★【改善】クライアントサイドで画像URLを事前バリデーション
+  const imageVal = document.getElementById('f-image').value.trim();
+  if (imageVal && !/^https?:\/\//i.test(imageVal)) {
+    document.getElementById('form-msg').textContent = '画像URLはhttps://から始めてください';
+    document.getElementById('form-msg').className = 'form-msg error';
+    return;
+  }
   const btn = document.getElementById('form-submit');
   btn.disabled = true;
   btn.textContent = '送信中...';
@@ -1497,7 +1532,8 @@ document.getElementById('form-submit').addEventListener('click', async () => {
     image:    document.getElementById('f-image').value.trim(),
   };
   try {
-    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const res = await fetch(GAS_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.success) {
       document.getElementById('form-msg').textContent = '✅ 追加しました！ページを再読み込みすると反映されます。';
@@ -1541,6 +1577,14 @@ async function submitVote(btn) {
   const score = parseInt(section.dataset.selectedScore);
   if (!score) return;
 
+  // ★【改善】localStorage で二重投票を抑止
+  if (hasVoted(title)) {
+    section.querySelector('.vote-result').textContent = '投票済みです';
+    btn.disabled = true;
+    btn.textContent = '投票済み';
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '送信中...';
   section.querySelector('.vote-result').textContent = '';
@@ -1548,20 +1592,27 @@ async function submitVote(btn) {
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // ★【改善】Content-Typeヘッダーを明示
       body: JSON.stringify({ type: 'vote', title, score })
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`); // ★【改善】HTTPエラーを明示的に処理
     const data = await res.json();
     if (data.success) {
+      markVoted(title); // ★【改善】投票済みをローカルに記録
       btn.textContent = '投票済み';
+      section.classList.add('done');
+      section.querySelectorAll('.vote-star-btn').forEach(b => b.disabled = true);
       section.querySelector('.vote-result').textContent =
         `平均 ${data.avg.toFixed(1)} (${data.total}票)`;
       const card = section.closest('.drama-card');
       updateUserRatingDisplay(card, data.avg, data.total);
+    } else {
+      throw new Error(data.error || '投票失敗');
     }
   } catch(e) {
     btn.disabled = false;
     btn.textContent = '投票する';
-    section.querySelector('.vote-result').textContent = 'エラー';
+    section.querySelector('.vote-result').textContent = 'エラー：再試行してください';
   }
 }
 
@@ -1574,39 +1625,73 @@ function updateUserRatingDisplay(card, avg, total) {
   el.querySelector('.user-rating-count').textContent = `(${total}票)`;
 }
 
-// 投票済み復元（制限なしモードのため何もしない）
-function restoreVotes() {}
+// ★【改善】投票のローカル記録（重複投票の抑止）
+// キー: 'votedDramas' → { "タイトル": timestamp }
+const VOTE_STORAGE_KEY = 'votedDramas';
+function getVotedDramas() {
+  try { return JSON.parse(localStorage.getItem(VOTE_STORAGE_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function markVoted(title) {
+  const voted = getVotedDramas();
+  voted[title] = Date.now();
+  localStorage.setItem(VOTE_STORAGE_KEY, JSON.stringify(voted));
+}
+function hasVoted(title) {
+  return !!getVotedDramas()[title];
+}
+
+// ★【改善】投票済み状態をDOMに反映する関数（loadDramaData後にも呼ばれる）
+function restoreVotes() {
+  const voted = getVotedDramas();
+  document.querySelectorAll('.vote-section').forEach(section => {
+    const title = section.dataset.title;
+    if (voted[title]) {
+      section.classList.add('done');
+      section.querySelectorAll('.vote-star-btn').forEach(b => b.disabled = true);
+      const submitBtn = section.querySelector('.vote-submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '投票済み';
+    }
+  });
+}
 
 async function handleLike(btn) {
   const title = btn.dataset.title;
   const isLiked = btn.classList.contains('liked');
   btn.classList.add('loading');
+  btn.disabled = true; // ★【改善】二重送信防止
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, // ★【改善】Content-Type明示
       body: JSON.stringify({ type: 'like', title, cancel: isLiked }),
     });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.success) {
       btn.querySelector('.like-count').textContent = data.likes;
       if (isLiked) {
-        // 解除
         btn.querySelector('.like-label').textContent = ' 未視聴';
         btn.classList.remove('liked');
         likedTitles.delete(title);
       } else {
-        // 設定
         btn.querySelector('.like-label').textContent = ' 未視聴設定済';
         btn.classList.add('liked');
         likedTitles.add(title);
       }
-      btn.classList.remove('loading');
+      // ★【改善】datasetのlikesも更新（未視聴数ソートに反映）
+      const card = btn.closest('.drama-card');
+      if (card) card.dataset.likes = data.likes;
       localStorage.setItem('likedTitles', JSON.stringify([...likedTitles]));
       gtag('event', 'like', { drama_title: title });
     }
   } catch(e) {
+    // ★【改善】エラー時も視覚フィードバックを出す
+    console.warn('いいね送信失敗:', e);
+  } finally {
     btn.classList.remove('loading');
-    console.log('いいね送信失敗:', e);
+    btn.disabled = false; // ★【改善】finally で確実に解除
   }
 }
 
@@ -1843,6 +1928,7 @@ function createCard(row) {
   card.dataset.streaming    = row[COL.streaming] || '';
   card.dataset.vAvg   = vAvg;
   card.dataset.vTotal = vTotal;
+  card.dataset.likes  = row[COL.likes] || 0; // ★【改善】likesをdatasetに保持（ソート用）
   card.dataset.v1 = v1; card.dataset.v2 = v2; card.dataset.v3 = v3;
   card.dataset.v4 = v4; card.dataset.v5 = v5;
 
@@ -1932,6 +2018,8 @@ function applyFiltersAndSort() {
   const selR = [...document.querySelectorAll('#rating-filter input:checked')].map(cb=>parseFloat(cb.value)).filter(v=>!isNaN(v));
   const selD = [...document.querySelectorAll('#decade-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
   const selG = [...document.querySelectorAll('#genre-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
+  // ★【改善】配信サービスフィルター
+  const selS = [...document.querySelectorAll('#streaming-filter input:checked')].map(cb=>cb.value).filter(v=>v!=='all');
 
   const q = (document.getElementById('search-input')?.value || '').trim().toLowerCase();
 
@@ -1943,7 +2031,9 @@ function applyFiltersAndSort() {
     const qOk = !q || [card.dataset.titleJp, card.dataset.cast, card.dataset.genre]
       .some(v => v && v.toLowerCase().includes(q));
     const gOk = selG.length===0 || selG.some(g => (card.dataset.genre||'').includes(g));
-    return cOk && rOk && dOk && chipOk && qOk && gOk;
+    // ★【改善】配信サービスフィルター適用
+    const sOk = selS.length===0 || selS.some(s => (card.dataset.streaming||'').includes(s));
+    return cOk && rOk && dOk && chipOk && qOk && gOk && sOk;
   });
 
   switch (currentSort) {
@@ -1951,6 +2041,9 @@ function applyFiltersAndSort() {
     case 'year-asc':    visible.sort((a,b)=>parseInt(a.dataset.year)-parseInt(b.dataset.year)); break;
     case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.rating)-parseFloat(a.dataset.rating)); break;
     case 'title-asc':   visible.sort((a,b)=>a.dataset.titleJp.localeCompare(b.dataset.titleJp,'ja')); break;
+    // ★【改善】みんなの評価・未視聴数ソートを追加
+    case 'vavg-desc':   visible.sort((a,b)=>parseFloat(b.dataset.vAvg||0)-parseFloat(a.dataset.vAvg||0)); break;
+    case 'likes-desc':  visible.sort((a,b)=>parseInt(b.dataset.likes||0)-parseInt(a.dataset.likes||0)); break;
   }
 
   const listEl = document.getElementById('drama-list');
@@ -2011,6 +2104,7 @@ document.getElementById('filter-close').addEventListener('click', () => {
 setupCheckboxGroup(document.getElementById('country-filter'));
 setupCheckboxGroup(document.getElementById('rating-filter'));
 setupCheckboxGroup(document.getElementById('decade-filter'));
+setupCheckboxGroup(document.getElementById('streaming-filter')); // ★【改善】配信フィルター追加
 
 function showLoadError() {
   const listEl = document.getElementById('drama-list');

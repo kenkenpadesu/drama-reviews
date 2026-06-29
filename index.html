@@ -928,6 +928,118 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .card-bottom-row .tags { display: none; }
   .card-tags-title { display: flex; }
 }
+
+/* ===== 気分フィルター（パターンB: 引き出し式） ===== */
+.mood-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #777;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+.mood-toggle-btn:hover { border-color: rgba(201,168,76,0.5); color: #c9a84c; }
+.mood-toggle-btn.active {
+  background: rgba(201,168,76,0.1);
+  border-color: #c9a84c;
+  color: #c9a84c;
+}
+.mood-drawer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease;
+  opacity: 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.mood-drawer.open {
+  max-height: 220px;
+  opacity: 1;
+}
+.mood-drawer-inner {
+  background: #111;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+}
+.mood-drawer-label {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #6b5d3f;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.mood-drawer-label::before {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 1px;
+  background: #6b5d3f;
+}
+.mood-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+@media (max-width: 639px) {
+  .mood-grid-inner { grid-template-columns: repeat(4, 1fr); }
+  .mood-drawer { padding: 0 1rem; }
+}
+.mood-tile {
+  background: #161616;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 10px 4px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.mood-tile:hover {
+  border-color: rgba(201,168,76,0.35);
+  background: #1a1a1a;
+}
+.mood-tile.active {
+  border-color: #c9a84c;
+  background: rgba(201,168,76,0.09);
+}
+.mood-tile-icon { font-size: 18px; line-height: 1; }
+.mood-tile-name {
+  font-size: 9px;
+  color: #777;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+.mood-tile.active .mood-tile-name { color: #c9a84c; }
+.mood-clear {
+  display: inline-block;
+  font-size: 10px;
+  color: #555;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  margin-top: 8px;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: color 0.15s;
+}
+.mood-clear:hover { color: #888; }
 </style>
 </head>
 <body>
@@ -1282,17 +1394,51 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <main>
-<!-- P10改善: コントロールバーにフィルター・管理ボタンをインライン配置 -->
+<!-- コントロールバー -->
 <div class="search-and-controls">
   <div class="controls" style="flex-wrap:wrap; gap:6px; align-items:center; width:100%">
+    <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer">🎭 気分で選ぶ</button>
     <button id="filter-button" class="filter-button">🔽 フィルター</button>
     <button id="admin-button" class="admin-button">＋ 追加</button>
     <button id="delete-mode-button" class="admin-button">🗑 削除</button>
-    <!-- P03改善: 適用中フィルタータグ表示エリア -->
     <div id="active-filter-tags" class="active-filter-tags"></div>
     <button class="chip active" data-filter="all">すべて</button>
     <span id="country-chips"></span>
     <span class="result-count" id="result-count"></span>
+  </div>
+</div>
+
+<!-- 気分引き出しパネル -->
+<div id="mood-drawer" class="mood-drawer" aria-hidden="true">
+  <div class="mood-drawer-inner">
+    <div class="mood-drawer-label">今夜の気分は？</div>
+    <div class="mood-grid-inner">
+      <div class="mood-tile" data-mood="cry"     data-genres="ヒューマン,ロマンス"            data-rewatch="">
+        <div class="mood-tile-icon">😭</div><div class="mood-tile-name">泣きたい</div>
+      </div>
+      <div class="mood-tile" data-mood="laugh"   data-genres="コメディ"                      data-rewatch="">
+        <div class="mood-tile-icon">😂</div><div class="mood-tile-name">笑いたい</div>
+      </div>
+      <div class="mood-tile" data-mood="love"    data-genres="ロマンス"                      data-rewatch="">
+        <div class="mood-tile-icon">💓</div><div class="mood-tile-name">恋愛したい</div>
+      </div>
+      <div class="mood-tile" data-mood="thrill"  data-genres="サスペンス・ミステリー,刑事・警察・法廷" data-rewatch="">
+        <div class="mood-tile-icon">😱</div><div class="mood-tile-name">ハラハラしたい</div>
+      </div>
+      <div class="mood-tile" data-mood="revenge" data-genres="アクション・復讐"               data-rewatch="">
+        <div class="mood-tile-icon">⚡</div><div class="mood-tile-name">スカッとしたい</div>
+      </div>
+      <div class="mood-tile" data-mood="short"   data-genres=""                             data-maxtime="50" data-rewatch="">
+        <div class="mood-tile-icon">🌙</div><div class="mood-tile-name">サクッと見たい</div>
+      </div>
+      <div class="mood-tile" data-mood="mature"  data-genres="社会派,医療"                   data-rewatch="">
+        <div class="mood-tile-icon">🍷</div><div class="mood-tile-name">大人な気分</div>
+      </div>
+      <div class="mood-tile" data-mood="rewatch" data-genres=""                             data-rewatch="またみたい">
+        <div class="mood-tile-icon">✨</div><div class="mood-tile-name">また見たい</div>
+      </div>
+    </div>
+    <button class="mood-clear" id="mood-clear-btn" style="display:none">気分をクリア</button>
   </div>
 </div>
   <div id="drama-list" class="drama-list">
@@ -2104,9 +2250,9 @@ function applyFiltersAndSort() {
     const qOk = !q || [card.dataset.titleJp, card.dataset.cast, card.dataset.genre]
       .some(v => v && v.toLowerCase().includes(q));
     const gOk = selG.length===0 || selG.some(g => (card.dataset.genre||'').includes(g));
-    // ★【改善】配信サービスフィルター適用
     const sOk = selS.length===0 || selS.some(s => (card.dataset.streaming||'').includes(s));
-    return cOk && rOk && dOk && chipOk && qOk && gOk && sOk;
+    const mOk = matchesMood(card, currentMood); // 気分フィルター
+    return cOk && rOk && dOk && chipOk && qOk && gOk && sOk && mOk;
   });
 
   switch (currentSort) {
@@ -2126,7 +2272,9 @@ function applyFiltersAndSort() {
   } else {
     visible.forEach(c => listEl.appendChild(c));
   }
-  document.getElementById('result-count').textContent = `${visible.length}作品`;
+  document.getElementById('result-count').textContent = currentMood
+    ? `${visible.length}作品（気分フィルター中）`
+    : `${visible.length}作品`;
 
   // P03改善: 適用中フィルタータグを更新
   renderActiveFilterTags(selC, selR, selD, selG, selS);
@@ -2317,6 +2465,94 @@ async function loadDramaData() {
   } catch (e) {
     showLoadError();
   }
+}
+
+// ===== 気分フィルター =====
+let currentMood = null; // 選択中の気分
+
+const moodToggleBtn  = document.getElementById('mood-toggle-btn');
+const moodDrawer     = document.getElementById('mood-drawer');
+const moodClearBtn   = document.getElementById('mood-clear-btn');
+const moodTiles      = document.querySelectorAll('.mood-tile');
+
+// 引き出し開閉
+moodToggleBtn.addEventListener('click', () => {
+  const isOpen = moodDrawer.classList.contains('open');
+  if (isOpen) {
+    closeMoodDrawer();
+  } else {
+    moodDrawer.classList.add('open');
+    moodDrawer.setAttribute('aria-hidden', 'false');
+    moodToggleBtn.setAttribute('aria-expanded', 'true');
+    moodToggleBtn.classList.add('active');
+  }
+});
+
+function closeMoodDrawer() {
+  moodDrawer.classList.remove('open');
+  moodDrawer.setAttribute('aria-hidden', 'true');
+  moodToggleBtn.setAttribute('aria-expanded', 'false');
+  // 気分が選択されていればボタンをアクティブのまま維持
+  if (!currentMood) moodToggleBtn.classList.remove('active');
+}
+
+// 気分タイルを選択
+moodTiles.forEach(tile => {
+  tile.addEventListener('click', () => {
+    const mood = tile.dataset.mood;
+    if (currentMood === mood) {
+      // 同じ気分を再タップでクリア
+      clearMoodFilter();
+      return;
+    }
+    currentMood = mood;
+    moodTiles.forEach(t => t.classList.remove('active'));
+    tile.classList.add('active');
+    moodClearBtn.style.display = 'inline-block';
+    moodToggleBtn.classList.add('active');
+    // 気分を選んだら引き出しを閉じてカード一覧へ
+    setTimeout(() => closeMoodDrawer(), 280);
+    applyFiltersAndSort();
+  });
+});
+
+// クリアボタン
+moodClearBtn.addEventListener('click', () => {
+  clearMoodFilter();
+  applyFiltersAndSort();
+});
+
+function clearMoodFilter() {
+  currentMood = null;
+  moodTiles.forEach(t => t.classList.remove('active'));
+  moodClearBtn.style.display = 'none';
+  moodToggleBtn.classList.remove('active');
+  moodToggleBtn.textContent = '';
+  moodToggleBtn.insertAdjacentText('afterbegin', '🎭 気分で選ぶ');
+}
+
+// 気分フィルターの判定ロジック
+function matchesMood(card, mood) {
+  if (!mood) return true;
+  const tile = document.querySelector(`.mood-tile[data-mood="${mood}"]`);
+  if (!tile) return true;
+
+  const genres   = (tile.dataset.genres  || '').split(',').map(s=>s.trim()).filter(Boolean);
+  const rewatchV = tile.dataset.rewatch  || '';
+  const maxTime  = parseInt(tile.dataset.maxtime) || 0;
+  const cardGenre   = card.dataset.genre   || '';
+  const cardRewatch = card.dataset.rewatch || '';
+  const cardTime    = parseInt(card.dataset.episodeTime) || 0;
+
+  // 「また見たい」は rewatch フィールドで判定
+  if (rewatchV) return cardRewatch === rewatchV;
+
+  // 「サクッと見たい」は時間で判定（時間未設定のカードも通す）
+  if (maxTime > 0) return cardTime === 0 || cardTime <= maxTime;
+
+  // それ以外はジャンルの部分一致
+  if (genres.length === 0) return true;
+  return genres.some(g => cardGenre.includes(g));
 }
 
 loadDramaData();

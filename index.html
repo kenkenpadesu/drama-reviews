@@ -580,7 +580,125 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 }
 .card-poster img:hover { transform: scale(1.06); }
 
-/* ===== ライトボックス ===== */
+/* ===== TMDB自動入力確認ダイアログ ===== */
+.tmdb-confirm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,.7);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.tmdb-confirm-overlay.open { display: flex; }
+.tmdb-confirm-dialog {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 460px;
+  animation: lbIn .2s ease;
+}
+.tmdb-confirm-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #f0ebe0;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tmdb-confirm-sub {
+  font-size: 11px;
+  color: #555;
+  margin-bottom: 1rem;
+}
+.tmdb-confirm-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 1.25rem;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.tmdb-confirm-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: #1a1a1a;
+  cursor: pointer;
+}
+.tmdb-confirm-item:has(input:checked) {
+  border-color: rgba(201,168,76,.35);
+  background: rgba(201,168,76,.06);
+}
+.tmdb-confirm-item input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: #c9a84c;
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+.tmdb-confirm-item-body { flex: 1; min-width: 0; }
+.tmdb-confirm-item-label {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 3px;
+}
+.tmdb-confirm-item-current {
+  font-size: 11px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tmdb-confirm-item-new {
+  font-size: 11px;
+  color: #c9a84c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+.tmdb-confirm-arrow {
+  font-size: 10px;
+  color: #444;
+  align-self: center;
+  flex-shrink: 0;
+}
+.tmdb-confirm-btns {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.tmdb-confirm-apply {
+  background: #c9a84c;
+  color: #0a0a0a;
+  border: none;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.tmdb-confirm-cancel {
+  background: transparent;
+  color: #666;
+  border: 1px solid #333;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 12px;
+  padding: 7px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+}
 .lightbox {
   display: none;
   position: fixed;
@@ -1622,6 +1740,19 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 <!-- ライトボックス -->
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="画像拡大表示">
+
+<!-- TMDB自動入力確認ダイアログ -->
+<div id="tmdb-confirm-overlay" class="tmdb-confirm-overlay" role="dialog" aria-modal="true">
+  <div class="tmdb-confirm-dialog">
+    <div class="tmdb-confirm-title">✨ TMDBから取得した情報</div>
+    <div class="tmdb-confirm-sub">チェックした項目のみ反映されます。既存の内容は上書きされます。</div>
+    <div class="tmdb-confirm-items" id="tmdb-confirm-items"></div>
+    <div class="tmdb-confirm-btns">
+      <button class="tmdb-confirm-cancel" id="tmdb-confirm-cancel">キャンセル</button>
+      <button class="tmdb-confirm-apply" id="tmdb-confirm-apply">選択した項目を反映</button>
+    </div>
+  </div>
+</div>
   <div class="lightbox-inner">
     <button class="lightbox-close" id="lightbox-close" aria-label="閉じる">✕</button>
     <img class="lightbox-img" id="lightbox-img" src="" alt="">
@@ -2795,7 +2926,10 @@ function matchesMood(card, mood) {
   return genres.some(g => cardGenre.includes(g));
 }
 
-// ===== TMDB まとめて自動入力 =====
+// ===== TMDB まとめて自動入力（項目選択式） =====
+let _tmdbPendingData = null;
+let _tmdbPendingPrefix = null;
+
 async function tmdbAutoFill(prefix) {
   const titleInput = document.getElementById(`${prefix}-title`);
   const query = titleInput?.value.trim();
@@ -2807,125 +2941,102 @@ async function tmdbAutoFill(prefix) {
 
   try {
     const [tvRes, movieRes] = await Promise.all([
-      fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(query)}&language=ja-JP`, {
-        headers: { Authorization: `Bearer ${TMDB_TOKEN}` }
-      }),
-      fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=ja-JP`, {
-        headers: { Authorization: `Bearer ${TMDB_TOKEN}` }
-      })
+      fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(query)}&language=ja-JP`, { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } }),
+      fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=ja-JP`, { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } })
     ]);
     const tvData    = await tvRes.json();
     const movieData = await movieRes.json();
-
     const tvResult    = (tvData.results    || []).find(r => r.poster_path);
     const movieResult = (movieData.results || []).find(r => r.poster_path);
     const result      = tvResult || movieResult;
     const isTV        = !!tvResult;
-
     if (!result) { alert('TMDBで該当作品が見つかりませんでした。\nタイトルを英語や原題で試してみてください。'); return; }
 
-    // 詳細情報を取得
-    const type       = isTV ? 'tv' : 'movie';
-    const detailRes  = await fetch(`https://api.themoviedb.org/3/${type}/${result.id}?language=ja-JP&append_to_response=credits`, {
-      headers: { Authorization: `Bearer ${TMDB_TOKEN}` }
-    });
-    const detail = await detailRes.json();
+    const type      = isTV ? 'tv' : 'movie';
+    const detailRes = await fetch(`https://api.themoviedb.org/3/${type}/${result.id}?language=ja-JP&append_to_response=credits`, { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } });
+    const detail    = await detailRes.json();
 
-    // --- 各フィールドに反映（空欄のみ自動入力） ---
-    const setIfEmpty = (id, val) => {
-      const el = document.getElementById(id);
-      if (el && !el.value.trim() && val) el.value = val;
-    };
-
-    // 制作国
-    const country = (detail.origin_country || [])[0] || '';
-    const countryMap = { JP:'日本', KR:'韓国', US:'アメリカ', GB:'イギリス', CN:'中国', TW:'台湾' };
-    setIfEmpty(`${prefix}-country`, countryMap[country] || country);
-
-    // あらすじ（入力済みなら確認ダイアログ）
-    const summaryEl = document.getElementById(`${prefix}-summary`);
-    const overview  = detail.overview || '';
-    if (summaryEl && overview) {
-      if (summaryEl.value.trim()) {
-        if (confirm('あらすじがすでに入力されています。\nTMDBの内容で上書きしますか？')) {
-          summaryEl.value = overview;
-        }
-      } else {
-        summaryEl.value = overview;
-      }
-    }
-
-    // 放送局
-    const network = isTV
-      ? ((detail.networks || [])[0]?.name || '')
-      : ((detail.production_companies || [])[0]?.name || '');
-    setIfEmpty(`${prefix}-station`, network);
-
-    // 放送年
-    const airDate = detail.first_air_date || detail.release_date || '';
-    setIfEmpty(`${prefix}-year`, airDate ? airDate.slice(0,4) + '年' : '');
-
-    // 1話の時間
-    const runtime = isTV
-      ? ((detail.episode_run_time || [])[0] || '')
-      : (detail.runtime || '');
-    const timeEl = document.getElementById(`${prefix}-episode-time`);
-    if (timeEl && !timeEl.value && runtime) timeEl.value = runtime;
-
-    // 話数
-    const episodesEl = document.getElementById(`${prefix}-episodes`);
-    const epCount = isTV ? (detail.number_of_episodes || '') : '';
-    if (episodesEl && !episodesEl.value && epCount) episodesEl.value = epCount;
-
-    // ジャンル（空欄のみ）
-    const genreEl = document.getElementById(`${prefix === 'f' ? 'f-genre-grid' : 'e-genre-grid'}`);
-    // ジャンルはチェックボックスなので既存チェックがない場合のみTMDBのジャンルをマッピング
+    const countryMap   = { JP:'日本', KR:'韓国', US:'アメリカ', GB:'イギリス', CN:'中国', TW:'台湾' };
     const tmdbGenreMap = { 18:'ヒューマン', 10749:'ロマンス', 35:'コメディ', 80:'サスペンス・ミステリー', 9648:'サスペンス・ミステリー', 10759:'アクション・復讐', 10765:'ファンタジー・SF', 99:'社会派' };
-    const tmdbGenres = (detail.genres || []).map(g => tmdbGenreMap[g.id]).filter(Boolean);
-    if (tmdbGenres.length && genreEl) {
-      const checked = genreEl.querySelectorAll('input:checked');
-      if (checked.length === 0) {
-        genreEl.querySelectorAll('input').forEach(cb => {
-          if (tmdbGenres.includes(cb.value)) { cb.checked = true; toggleGenreLabel(cb); }
-        });
-      }
-    }
+    const country = countryMap[(detail.origin_country||[])[0]] || (detail.origin_country||[])[0] || '';
+    const genres  = [...new Set((detail.genres||[]).map(g=>tmdbGenreMap[g.id]).filter(Boolean))];
+    const cast    = (detail.credits?.cast||[]).slice(0,5).map(c=>`${c.name}（${c.character||''}）`).join('、');
+    const airDate = detail.first_air_date || detail.release_date || '';
+    const runtime = isTV ? ((detail.episode_run_time||[])[0]||'') : (detail.runtime||'');
 
-    // キャスト（出演者名（役名）形式）
-    const cast = (detail.credits?.cast || []).slice(0, 5)
-      .map(c => `${c.name}（${c.character || ''}）`).join('、');
-    setIfEmpty(`${prefix}-cast`, cast);
-
-    // ポスター画像
-    if (result.poster_path) {
-      const imageEl = document.getElementById(`${prefix}-image`);
-      const labelEl = document.getElementById(`${prefix}-tmdb-label`);
-      if (imageEl && !imageEl.value) {
-        imageEl.value = 'https://image.tmdb.org/t/p/w500' + result.poster_path;
-        if (labelEl) labelEl.style.display = 'flex';
-      } else if (imageEl) {
-        // 画像はポスター候補として表示
-        searchTmdbPosters(
-          query,
-          document.getElementById(`${prefix}-tmdb-results`),
-          imageEl,
-          labelEl,
-          btn
-        );
-      }
-    }
-
-    btn.textContent = '✅ 自動入力完了';
-    setTimeout(() => { btn.textContent = '✨ TMDBからまとめて自動入力'; btn.disabled = false; }, 2000);
+    _tmdbPendingData = {
+      country:    { label:'制作国',          id:`${prefix}-country`,      val:country },
+      summary:    { label:'あらすじ',         id:`${prefix}-summary`,      val:detail.overview||'' },
+      station:    { label:'放送局',           id:`${prefix}-station`,      val:isTV?((detail.networks||[])[0]?.name||''):((detail.production_companies||[])[0]?.name||'') },
+      year:       { label:'放送年',           id:`${prefix}-year`,         val:airDate?airDate.slice(0,4)+'年':'' },
+      episodeTime:{ label:'1話の時間（分）',   id:`${prefix}-episode-time`, val:String(runtime) },
+      episodes:   { label:'話数',             id:`${prefix}-episodes`,     val:isTV?String(detail.number_of_episodes||''):'' },
+      genre:      { label:'ジャンル',          id:null,                     val:genres.join('・') },
+      cast:       { label:'キャスト（役名付き）',id:`${prefix}-cast`,       val:cast },
+      image:      { label:'ポスター画像',      id:`${prefix}-image`,        val:result.poster_path?'https://image.tmdb.org/t/p/w500'+result.poster_path:'' },
+    };
+    _tmdbPendingData   = Object.fromEntries(Object.entries(_tmdbPendingData).filter(([,v])=>v.val));
+    _tmdbPendingPrefix = prefix;
+    showTmdbConfirm(_tmdbPendingData, prefix);
 
   } catch (err) {
     alert('TMDBからの取得に失敗しました。\n' + err.message);
+  } finally {
     btn.disabled = false;
     btn.textContent = '✨ TMDBからまとめて自動入力';
   }
 }
 
-// 自動入力ボタンのイベント登録
+function showTmdbConfirm(data, prefix) {
+  const overlay = document.getElementById('tmdb-confirm-overlay');
+  const itemsEl = document.getElementById('tmdb-confirm-items');
+  itemsEl.innerHTML = '';
+  Object.entries(data).forEach(([key, item]) => {
+    let currentVal = '';
+    if (item.id) { const el = document.getElementById(item.id); currentVal = el ? (el.value||'').trim() : ''; }
+    const defaultChecked = !currentVal;
+    itemsEl.innerHTML += `<label class="tmdb-confirm-item">
+      <input type="checkbox" data-key="${key}" ${defaultChecked?'checked':''}>
+      <div class="tmdb-confirm-item-body">
+        <div class="tmdb-confirm-item-label">${item.label}</div>
+        ${currentVal?`<div class="tmdb-confirm-item-current">現在：${currentVal.slice(0,40)}${currentVal.length>40?'…':''}</div>`:''}
+        <div class="tmdb-confirm-item-new">→ ${item.val.slice(0,60)}${item.val.length>60?'…':''}</div>
+      </div>
+    </label>`;
+  });
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('tmdb-confirm-apply').addEventListener('click', () => {
+  const data = _tmdbPendingData;
+  const prefix = _tmdbPendingPrefix;
+  if (!data || !prefix) return;
+  document.querySelectorAll('#tmdb-confirm-items input[type="checkbox"]:checked').forEach(cb => {
+    const key  = cb.dataset.key;
+    const item = data[key];
+    if (!item) return;
+    if (key === 'genre') {
+      const gridId = prefix === 'f' ? 'f-genre-grid' : 'e-genre-grid';
+      const grid   = document.getElementById(gridId);
+      if (grid) { const genres = item.val.split('・'); grid.querySelectorAll('input').forEach(c => { if (genres.includes(c.value)) { c.checked = true; toggleGenreLabel(c); } }); }
+    } else if (item.id) {
+      const el = document.getElementById(item.id);
+      if (el) el.value = item.val;
+      if (key === 'image') { const lbl = document.getElementById(`${prefix}-tmdb-label`); if (lbl) lbl.style.display = 'flex'; }
+    }
+  });
+  closeTmdbConfirm();
+});
+
+document.getElementById('tmdb-confirm-cancel').addEventListener('click', closeTmdbConfirm);
+
+function closeTmdbConfirm() {
+  document.getElementById('tmdb-confirm-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  _tmdbPendingData = null; _tmdbPendingPrefix = null;
+}
+
 document.getElementById('f-tmdb-autofill-btn').addEventListener('click', () => tmdbAutoFill('f'));
 document.getElementById('e-tmdb-autofill-btn').addEventListener('click', () => tmdbAutoFill('e'));
 

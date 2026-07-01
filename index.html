@@ -599,7 +599,10 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   border-radius: 14px;
   padding: 1.5rem;
   width: 100%;
-  max-width: 460px;
+  max-width: 520px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   animation: lbIn .2s ease;
 }
 .tmdb-confirm-title {
@@ -621,8 +624,9 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   flex-direction: column;
   gap: 6px;
   margin-bottom: 1.25rem;
-  max-height: 320px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 .tmdb-confirm-item {
   display: flex;

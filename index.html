@@ -2328,7 +2328,7 @@ function createCard(row) {
   const emoji = getEmoji(country);
 
   const posterHtml = imgUrl
-    ? `<img src="${esc(imgUrl)}" alt="${esc(title)}" loading="lazy" onclick="openLightbox('${esc(imgUrl).replace(/'/g,"\\'")}','${esc(title).replace(/'/g,"\\'")}\")" style="cursor:zoom-in" onerror="this.parentElement.innerHTML='<div class=\\'card-poster-placeholder\\'>${emoji}</div>'">`
+    ? `<img src="${esc(imgUrl)}" alt="${esc(title)}" loading="lazy" onclick="openLightbox(this.src,'${esc(title).replace(/'/g, '&#39;')}')" style="cursor:zoom-in" onerror="this.parentElement.innerHTML='<div class=\\'card-poster-placeholder\\'>${emoji}</div>'">`
     : `<div class="card-poster-placeholder">${emoji}</div>`;
 
   card.innerHTML = `
@@ -2646,10 +2646,12 @@ const lightboxImg   = document.getElementById('lightbox-img');
 const lightboxTitle = document.getElementById('lightbox-title');
 const lightboxClose = document.getElementById('lightbox-close');
 
-function openLightbox(url, title) {
-  // w500サイズで取得（より高解像度）
-  const hiRes = url.replace('/w185/', '/w500/').replace('/w342/', '/w500/');
-  lightboxImg.src = hiRes || url;
+function openLightbox(src, title) {
+  // TMDBの画像はw500版に差し替え、それ以外はそのまま
+  const hiRes = src.includes('image.tmdb.org')
+    ? src.replace(/\/w\d+\//, '/w500/')
+    : src;
+  lightboxImg.src = hiRes;
   lightboxImg.alt = title;
   lightboxTitle.textContent = title;
   lightbox.classList.add('open');

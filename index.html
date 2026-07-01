@@ -929,7 +929,84 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .card-tags-title { display: flex; }
 }
 
-/* ===== 気分フィルター（パターンB: 引き出し式） ===== */
+/* ===== TMDB画像検索 ===== */
+.tmdb-search-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(1,180,228,0.12);
+  border: 1px solid rgba(1,180,228,0.35);
+  color: #01b4e4;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+.tmdb-search-btn:hover {
+  background: rgba(1,180,228,0.22);
+  border-color: #01b4e4;
+}
+.tmdb-search-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tmdb-results {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  background: #0a0a0a;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.tmdb-results.visible { display: flex; }
+.tmdb-poster {
+  width: 72px;
+  border-radius: 5px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+  object-fit: cover;
+  aspect-ratio: 2/3;
+  background: #1a1a1a;
+}
+.tmdb-poster:hover {
+  border-color: #01b4e4;
+  transform: scale(1.05);
+}
+.tmdb-poster.selected {
+  border-color: #c9a84c;
+}
+.tmdb-no-result {
+  font-size: 11px;
+  color: #555;
+  padding: 8px;
+}
+.tmdb-label {
+  font-size: 9px;
+  color: #01b4e4;
+  letter-spacing: .08em;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tmdb-label::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background: #01b4e4;
+  border-radius: 50%;
+}
 .mood-toggle-btn {
   display: inline-flex;
   align-items: center;
@@ -1166,7 +1243,12 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     </div>
     <div class="form-group">
       <label class="form-label">画像URL</label>
-      <input type="text" class="form-input" id="e-image">
+      <input type="text" class="form-input" id="e-image" placeholder="https://... （またはTMDBで検索）">
+      <button type="button" class="tmdb-search-btn" id="e-tmdb-btn">🔍 TMDBでポスターを検索</button>
+      <div class="tmdb-results" id="e-tmdb-results"></div>
+      <div class="tmdb-label" id="e-tmdb-label" style="display:none">
+        画像提供: <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="color:#01b4e4;text-decoration:none;">The Movie Database (TMDB)</a>
+      </div>
     </div>
     <div class="form-group">
       <label class="form-label">感想</label>
@@ -1302,7 +1384,12 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       </div>
       <div class="form-group">
         <label class="form-label">画像URL</label>
-        <input type="text" class="form-input" id="f-image" placeholder="https://...">
+        <input type="text" class="form-input" id="f-image" placeholder="https://... （またはTMDBで検索）">
+        <button type="button" class="tmdb-search-btn" id="f-tmdb-btn">🔍 TMDBでポスターを検索</button>
+        <div class="tmdb-results" id="f-tmdb-results"></div>
+        <div class="tmdb-label" id="f-tmdb-label" style="display:none">
+          画像提供: <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="color:#01b4e4;text-decoration:none;">The Movie Database (TMDB)</a>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">感想</label>
@@ -1462,6 +1549,22 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 <footer>
   <p>&copy; <span id="year"></span> けんけんぱのドラマレビュー. All rights reserved.</p>
+  <!-- TMDB アトリビューション（利用規約上必須） -->
+  <div style="margin-top:1.2rem; display:flex; align-items:center; justify-content:center; gap:10px;">
+    <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:10px; text-decoration:none; opacity:.45; transition:opacity .2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='.45'">
+      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 190.24 81.52" width="64" height="28" aria-label="The Movie Database">
+        <defs>
+          <linearGradient id="tmdb-lg" y1="40.76" x2="190.24" y2="40.76" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#90cea1"/>
+            <stop offset=".56" stop-color="#3cbec9"/>
+            <stop offset="1" stop-color="#00b3e5"/>
+          </linearGradient>
+        </defs>
+        <path fill="url(#tmdb-lg)" d="M105.67,36.06h66.9A17.67,17.67,0,0,0,190.24,18.4h0A17.67,17.67,0,0,0,172.57.73h-66.9A17.67,17.67,0,0,0,88,18.4h0A17.67,17.67,0,0,0,105.67,36.06Zm-88,45h76.9A17.67,17.67,0,0,0,112.24,63.4h0A17.67,17.67,0,0,0,94.57,45.73H17.67A17.67,17.67,0,0,0,0,63.4H0A17.67,17.67,0,0,0,17.67,81.06ZM10.41,35.42h7.8V6.92h10.1V0H.31v6.9h10.1Zm28.1,0h7.8V8.25h.1l9,27.15h6l9.3-27.15h.1V35.4h7.8V0H66.76l-8.2,23.1h-.1L50.31,0H38.51ZM152.43,55.67a15.07,15.07,0,0,0-4.52-5.52,18.57,18.57,0,0,0-6.68-3.08,33.54,33.54,0,0,0-8.07-1h-11.7v35.4h12.75a24.58,24.58,0,0,0,7.55-1.15A19.34,19.34,0,0,0,148.11,77a16.27,16.27,0,0,0,4.37-5.5,16.91,16.91,0,0,0,1.63-7.58A18.5,18.5,0,0,0,152.43,55.67ZM145,68.6A8.8,8.8,0,0,1,142.36,72a10.7,10.7,0,0,1-4,1.82,21.57,21.57,0,0,1-5,.55h-4.05v-21h4.6a17,17,0,0,1,4.67.63,11.66,11.66,0,0,1,3.88,1.87A9.14,9.14,0,0,1,145,59a9.87,9.87,0,0,1,1,4.52A11.89,11.89,0,0,1,145,68.6Zm44.63-.13a8,8,0,0,0-1.58-2.62A8.38,8.38,0,0,0,185.63,64a10.31,10.31,0,0,0-3.17-1v-.1a9.22,9.22,0,0,0,4.42-2.82,7.43,7.43,0,0,0,1.68-5,8.42,8.42,0,0,0-1.15-4.65,8.09,8.09,0,0,0-3-2.72,12.56,12.56,0,0,0-4.18-1.3,32.84,32.84,0,0,0-4.62-.33h-13.2v35.4h14.5a22.41,22.41,0,0,0,4.72-.5,13.53,13.53,0,0,0,4.28-1.65,9.42,9.42,0,0,0,3.1-3,8.52,8.52,0,0,0,1.2-4.68A9.39,9.39,0,0,0,189.66,68.47ZM170.21,52.72h5.3a10,10,0,0,1,1.85.18,6.18,6.18,0,0,1,1.7.57,3.39,3.39,0,0,1,1.22,1.13,3.22,3.22,0,0,1,.48,1.82,3.63,3.63,0,0,1-.43,1.8,3.4,3.4,0,0,1-1.12,1.2,4.92,4.92,0,0,1-1.58.65,7.51,7.51,0,0,1-1.77.2h-5.65Zm11.72,20a3.9,3.9,0,0,1-1.22,1.3,4.64,4.64,0,0,1-1.68.7,8.18,8.18,0,0,1-1.82.2h-7v-8h5.9a15.35,15.35,0,0,1,2,.15,8.47,8.47,0,0,1,2.05.55,4,4,0,0,1,1.57,1.18,3.11,3.11,0,0,1,.63,2A3.71,3.71,0,0,1,181.93,72.72Z"/>
+      </svg>
+      <span style="font-size:10px; color:#555; letter-spacing:.04em;">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
+    </a>
+  </div>
 </footer>
 
 <script>
@@ -2572,6 +2675,111 @@ function matchesMood(card, mood) {
   if (genres.length === 0) return true;
   return genres.some(g => cardGenre.includes(g));
 }
+
+// ===== TMDB画像検索 =====
+const TMDB_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI1YTc1YjVhZGRmMGQ4YjEyOTY5ZGY4ZTEwZGIxYzE2NSIsIm5iZiI6MTc4Mjg4NzYwOC4yODcwMDAyLCJzdWIiOiI2YTQ0YjRiODUwZGY5NDNhYjZjNDdkZjQiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.cQ1Ci9VLj7f5GSqt_MIgxW-Hfw0GY-ek0opMNO5vMrU';
+const TMDB_IMG  = 'https://image.tmdb.org/t/p/w185';
+
+// TMDB検索共通関数
+async function searchTmdbPosters(query, resultsEl, imageInputEl, labelEl, btn) {
+  if (!query) {
+    resultsEl.innerHTML = '<span class="tmdb-no-result">タイトルを先に入力してください</span>';
+    resultsEl.classList.add('visible');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '🔍 検索中...';
+  resultsEl.innerHTML = '';
+  resultsEl.classList.remove('visible');
+
+  try {
+    // まず日本語でTV検索
+    const [tvRes, movieRes] = await Promise.all([
+      fetch(`https://api.themoviedb.org/3/search/tv?query=${encodeURIComponent(query)}&language=ja-JP&page=1`, {
+        headers: { Authorization: `Bearer ${TMDB_TOKEN}`, 'Content-Type': 'application/json' }
+      }),
+      fetch(`https://api.themoviedb.org/3/search/movie?query=${encodeURIComponent(query)}&language=ja-JP&page=1`, {
+        headers: { Authorization: `Bearer ${TMDB_TOKEN}`, 'Content-Type': 'application/json' }
+      })
+    ]);
+    const tvData    = await tvRes.json();
+    const movieData = await movieRes.json();
+
+    // TV＋映画の結果をマージしてポスターがあるものだけ取得
+    const results = [
+      ...(tvData.results    || []),
+      ...(movieData.results || [])
+    ].filter(r => r.poster_path);
+
+    if (results.length === 0) {
+      resultsEl.innerHTML = '<span class="tmdb-no-result">ポスターが見つかりませんでした。タイトルを英語や原題で試してみてください。</span>';
+      resultsEl.classList.add('visible');
+      return;
+    }
+
+    // 最大12件表示
+    resultsEl.innerHTML = results.slice(0, 12).map((r, i) => {
+      const name  = r.name || r.title || '';
+      const year  = (r.first_air_date || r.release_date || '').slice(0, 4);
+      const thumb = TMDB_IMG + r.poster_path;
+      const full  = 'https://image.tmdb.org/t/p/w500' + r.poster_path;
+      return `<img
+        class="tmdb-poster"
+        src="${thumb}"
+        data-full="${full}"
+        title="${esc(name)}${year ? ' (' + year + ')' : ''}"
+        loading="lazy"
+        alt="${esc(name)}"
+      >`;
+    }).join('');
+    resultsEl.classList.add('visible');
+
+    // ポスタークリックで画像URL確定
+    resultsEl.querySelectorAll('.tmdb-poster').forEach(img => {
+      img.addEventListener('click', () => {
+        resultsEl.querySelectorAll('.tmdb-poster').forEach(i => i.classList.remove('selected'));
+        img.classList.add('selected');
+        imageInputEl.value = img.dataset.full;
+        labelEl.style.display = 'flex';
+        // 少し待ってから閉じる
+        setTimeout(() => {
+          resultsEl.classList.remove('visible');
+        }, 600);
+      });
+    });
+
+  } catch (err) {
+    resultsEl.innerHTML = '<span class="tmdb-no-result">通信エラーが発生しました。再試行してください。</span>';
+    resultsEl.classList.add('visible');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 TMDBでポスターを検索';
+  }
+}
+
+// 追加フォーム用
+document.getElementById('f-tmdb-btn').addEventListener('click', () => {
+  const query = document.getElementById('f-title').value.trim();
+  searchTmdbPosters(
+    query,
+    document.getElementById('f-tmdb-results'),
+    document.getElementById('f-image'),
+    document.getElementById('f-tmdb-label'),
+    document.getElementById('f-tmdb-btn')
+  );
+});
+
+// 編集フォーム用
+document.getElementById('e-tmdb-btn').addEventListener('click', () => {
+  const query = document.getElementById('e-title').value.trim();
+  searchTmdbPosters(
+    query,
+    document.getElementById('e-tmdb-results'),
+    document.getElementById('e-image'),
+    document.getElementById('e-tmdb-label'),
+    document.getElementById('e-tmdb-btn')
+  );
+});
 
 loadDramaData();
 </script>

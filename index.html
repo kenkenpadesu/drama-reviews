@@ -1253,6 +1253,29 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   background: #01b4e4;
   border-radius: 50%;
 }
+/* ソートインラインボタン */
+.sort-inline-btn {
+  font-size: 11px;
+  padding: 4px 11px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: #666;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.sort-inline-btn:hover { border-color: rgba(201,168,76,.4); color: #c9a84c; }
+.sort-inline-btn.active {
+  background: rgba(201,168,76,.12);
+  border-color: rgba(201,168,76,.5);
+  color: #c9a84c;
+  font-weight: 500;
+}
+
 .mood-toggle-btn {
   display: inline-flex;
   align-items: center;
@@ -1668,19 +1691,6 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <div id="filter-overlay" class="filter-overlay">
   <button class="filter-close" id="filter-close">✕　閉じる</button>
   <div class="filter-section">
-    <div class="filter-section-title">並び替え</div>
-    <div class="sort-buttons">
-      <button class="sort-button" data-sort="default">デフォルト</button>
-      <button class="sort-button" data-sort="year-desc">年代：新しい順</button>
-      <button class="sort-button" data-sort="year-asc">年代：古い順</button>
-      <button class="sort-button" data-sort="rating-desc">評価：高い順</button>
-      <button class="sort-button" data-sort="title-asc">タイトル：あいうえお順</button>
-      <!-- ★【改善】みんなの評価順ソートを追加 -->
-      <button class="sort-button" data-sort="vavg-desc">みんなの評価：高い順</button>
-      <button class="sort-button" data-sort="likes-desc">未視聴数：多い順</button>
-    </div>
-  </div>
-  <div class="filter-section">
     <div class="filter-section-title">国で絞り込み</div>
     <div class="filter-options" id="country-filter">
       <label><input type="checkbox" value="all" checked> すべての国</label>
@@ -1745,15 +1755,13 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <main>
-<!-- コントロールバー：1行目（ボタン類）/ 2行目（国チップ） -->
+<!-- コントロールバー：1行目（機能ボタン＋ソート） -->
 <div class="search-and-controls">
-  <!-- 1行目：機能ボタン + 件数 -->
   <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:wrap;">
     <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer">🎭 気分で選ぶ</button>
     <button id="filter-button" class="filter-button">🔽 フィルター</button>
     <button id="admin-button" class="admin-button">＋ 追加</button>
     <button id="delete-mode-button" class="admin-button">🗑 削除</button>
-    <!-- 気分選択中タグ（コントロールバー内に常時表示） -->
     <span id="mood-active-tag" style="display:none; align-items:center; gap:4px; font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:#c9a84c;">
       <span id="mood-active-label"></span>
       <button id="mood-clear-tag-btn" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;" aria-label="気分をクリア">✕</button>
@@ -1761,7 +1769,17 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div id="active-filter-tags" class="active-filter-tags"></div>
     <span class="result-count" id="result-count"></span>
   </div>
-  <!-- 2行目：すべて＋国チップ（常に1行に収める） -->
+  <!-- ソートボタン（横スクロール対応） -->
+  <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:5px 0 4px; margin-top:4px; scrollbar-width:none; -webkit-overflow-scrolling:touch;">
+    <span style="font-size:10px; color:#6b5d3f; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;">並び順</span>
+    <button class="sort-inline-btn active" data-sort="year-desc">📅 新しい順</button>
+    <button class="sort-inline-btn" data-sort="rating-desc">⭐ 評価：高い順</button>
+    <button class="sort-inline-btn" data-sort="vavg-desc">👥 みんな評価</button>
+    <button class="sort-inline-btn" data-sort="title-asc">🔤 あいうえお順</button>
+    <button class="sort-inline-btn" data-sort="year-asc">📅 古い順</button>
+    <button class="sort-inline-btn" data-sort="default">🔄 デフォルト</button>
+  </div>
+  <!-- 2行目：すべて＋国チップ -->
   <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; margin-top:6px; margin-bottom:1rem; scrollbar-width:none;">
     <button class="chip active" data-filter="all">すべて</button>
     <span id="country-chips" style="display:contents;"></span>
@@ -2767,8 +2785,14 @@ document.querySelector('.chip[data-filter="all"]').addEventListener('click', fun
   applyFiltersAndSort();
 });
 
-document.querySelectorAll('.sort-button').forEach(btn => {
-  btn.addEventListener('click', () => { currentSort = btn.dataset.sort; applyFiltersAndSort(); });
+// ソートインラインボタン
+document.querySelectorAll('.sort-inline-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentSort = btn.dataset.sort;
+    document.querySelectorAll('.sort-inline-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFiltersAndSort();
+  });
 });
 
 document.getElementById('filter-button').addEventListener('click', () => {

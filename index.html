@@ -1806,7 +1806,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <div class="mood-tile" data-mood="revenge" data-genres="アクション・復讐"               data-rewatch="">
         <div class="mood-tile-icon">⚡</div><div class="mood-tile-name">スカッとしたい</div>
       </div>
-      <div class="mood-tile" data-mood="short"   data-genres=""                             data-maxtime="50" data-rewatch="">
+      <div class="mood-tile" data-mood="short"   data-genres=""                             data-maxepisodes="6" data-rewatch="">
         <div class="mood-tile-icon">🌙</div><div class="mood-tile-name">サクッと見たい</div>
       </div>
       <div class="mood-tile" data-mood="mature"  data-genres="社会派,医療"                   data-rewatch="">
@@ -2576,6 +2576,7 @@ function createCard(row) {
   card.dataset.scoreMusic   = scoreMusic;
   card.dataset.scoreSat     = scoreSat;
   card.dataset.episodeTime  = episodeTime;
+  card.dataset.episodes     = episodes;
   card.dataset.rewatch      = rewatch;
   card.dataset.streaming    = row[COL.streaming] || '';
   card.dataset.vAvg   = vAvg;
@@ -3024,15 +3025,25 @@ function matchesMood(card, mood) {
   const tile = document.querySelector(`.mood-tile[data-mood="${mood}"]`);
   if (!tile) return true;
 
-  const genres   = (tile.dataset.genres  || '').split(',').map(s=>s.trim()).filter(Boolean);
-  const rewatchV = tile.dataset.rewatch  || '';
-  const maxTime  = parseInt(tile.dataset.maxtime) || 0;
-  const cardGenre   = card.dataset.genre   || '';
-  const cardRewatch = card.dataset.rewatch || '';
-  const cardTime    = parseInt(card.dataset.episodeTime) || 0;
+  const genres      = (tile.dataset.genres      || '').split(',').map(s=>s.trim()).filter(Boolean);
+  const rewatchV    = tile.dataset.rewatch       || '';
+  const maxTime     = parseInt(tile.dataset.maxtime)     || 0;
+  const maxEpisodes = parseInt(tile.dataset.maxepisodes) || 0;
+  const cardGenre    = card.dataset.genre    || '';
+  const cardRewatch  = card.dataset.rewatch  || '';
+  const cardTime     = parseInt(card.dataset.episodeTime) || 0;
+  const cardEpisodes = parseInt(card.dataset.episodes)    || 0;
 
+  // 「また見たい」は rewatch フィールドで判定
   if (rewatchV) return cardRewatch === rewatchV;
+
+  // 「サクッと見たい」は話数で判定（話数未設定のカードは除外しない）
+  if (maxEpisodes > 0) return cardEpisodes === 0 || cardEpisodes <= maxEpisodes;
+
+  // 時間フィルター（将来用）
   if (maxTime > 0) return cardTime === 0 || cardTime <= maxTime;
+
+  // それ以外はジャンルの部分一致
   if (genres.length === 0) return true;
   return genres.some(g => cardGenre.includes(g));
 }

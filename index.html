@@ -831,7 +831,22 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .card-bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .stars { display: flex; gap: 1px; align-items: center; }
 .star-on  { font-size: 13px; color: var(--gold); }
-.star-off { font-size: 13px; color: #444; } /* P04改善: #2a2a2a→#444 コントラスト向上 */
+.star-off { font-size: 13px; color: #444; }
+.star-half-wrap {
+  position: relative;
+  display: inline-block;
+  font-size: 13px;
+  color: #444;
+  line-height: 1;
+}
+.star-half-fill {
+  position: absolute;
+  top: 0; left: 0;
+  width: 50%;
+  overflow: hidden;
+  color: var(--gold);
+  line-height: 1;
+}
 .rating-num { font-size: 11px; color: #555; margin-left: 4px; }
 .tags { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag { font-size: 10px; padding: 2px 8px; border: 1px solid rgba(255,255,255,0.12); color: #888; border-radius: 3px; letter-spacing: 0.03em; background: rgba(255,255,255,0.03); } /* P05改善: タグ視認性向上 */
@@ -2226,10 +2241,10 @@ async function submitVote(btn) {
 function updateUserRatingDisplay(card, avg, total) {
   const el = card.querySelector('.user-rating-inline');
   if (!el) return;
-  const stars = '★'.repeat(Math.round(avg)) + '☆'.repeat(5 - Math.round(avg));
-  el.querySelector('.user-stars-wrap').innerHTML = stars;
+  el.querySelector('.user-stars-wrap').innerHTML = renderStars(avg);
   el.querySelector('.user-rating-num').textContent = avg.toFixed(1);
   el.querySelector('.user-rating-count').textContent = `(${total}票)`;
+  el.dataset.vavg = avg;
 }
 
 // ★【改善】投票のローカル記録（重複投票の抑止）
@@ -2429,9 +2444,19 @@ function esc(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function renderStars(n) {
+// 半星対応 renderStars（0.25〜0.74 → 半星、0.75以上 → 満星）
+function renderStars(val) {
   let h = '';
-  for (let i = 1; i <= 5; i++) h += `<span class="${i<=n?'star-on':'star-off'}">★</span>`;
+  for (let i = 1; i <= 5; i++) {
+    const diff = val - (i - 1);
+    if (diff >= 0.75) {
+      h += `<span class="star-on">★</span>`;
+    } else if (diff >= 0.25) {
+      h += `<span class="star-half-wrap">★<span class="star-half-fill">★</span></span>`;
+    } else {
+      h += `<span class="star-off">★</span>`;
+    }
+  }
   return h;
 }
 
@@ -2487,11 +2512,11 @@ function createCard(row) {
   const scoreMusic  = parseInt(row[COL.scoreMusic])  || 0;
   const scoreSat    = parseInt(row[COL.scoreSat])    || 0;
   const hasScores   = scoreStory || scoreCast || scoreVisual || scoreMusic || scoreSat;
-  // 5項目がある場合は平均値、なければ元の点数をそのまま使用
   const ratingRaw = hasScores
     ? Math.round((scoreStory + scoreCast + scoreVisual + scoreMusic + scoreSat) / 5 * 10) / 10
     : parseFloat(row[COL.rating]) || 0;
-  const rating = Math.round(ratingRaw);
+  const rating = Math.round(ratingRaw);       // 表示用（整数）
+  const ratingDecimal = ratingRaw;            // ソート用（小数）
   const review      = row[COL.review]      || '';
   const imgUrl      = row[COL.image]       || '';
   const episodeTime = parseInt(row[COL.episodeTime]) || 0;
@@ -2512,8 +2537,9 @@ function createCard(row) {
 
   const card = document.createElement('div');
   card.className = 'drama-card';
-  card.dataset.stripe    = getStripeClass(country); // P02改善: 国別左ボーダー用
-  card.dataset.rating    = rating;
+  card.dataset.stripe        = getStripeClass(country);
+  card.dataset.rating        = rating;
+  card.dataset.ratingDecimal = ratingDecimal;
   card.dataset.decade    = getDecade(year);
   card.dataset.titleJp   = title;
   card.dataset.country   = finalC;
@@ -2561,8 +2587,8 @@ function createCard(row) {
         ${tags.length ? `<div class="tags card-tags-title">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="card-bottom-row">
           <div class="card-ratings-row">
-            <div class="rating-item"><span class="rating-owner-label">けんけんぱ</span><div class="stars">${renderStars(rating)}<span class="rating-num">${ratingRaw.toFixed(1)}</span></div>${rewatch ? `<span class="extra-badge ${rewatch === 'またみたい' ? 'rewatch-yes' : 'rewatch-no'}">${rewatch}</span>` : ''}</div>
-            <div class="rating-item user-rating-inline" data-vavg="${vAvg}" data-vtotal="${vTotal}"><span class="user-rating-label">みんな</span><span class="user-stars-wrap">${vAvg > 0 ? renderStars(Math.round(vAvg)) : '─'}</span><span class="user-rating-num">${vAvg > 0 ? vAvg.toFixed(1) : ''}</span><span class="user-rating-count">${vAvg > 0 ? `(${vTotal}票)` : '未投票'}</span></div>
+            <div class="rating-item"><span class="rating-owner-label">けんけんぱ</span><div class="stars">${renderStars(ratingRaw)}<span class="rating-num">${ratingRaw.toFixed(1)}</span></div>${rewatch ? `<span class="extra-badge ${rewatch === 'またみたい' ? 'rewatch-yes' : 'rewatch-no'}">${rewatch}</span>` : ''}</div>
+            <div class="rating-item user-rating-inline" data-vavg="${vAvg}" data-vtotal="${vTotal}"><span class="user-rating-label">みんな</span><span class="user-stars-wrap">${vAvg > 0 ? renderStars(vAvg) : '─'}</span><span class="user-rating-num">${vAvg > 0 ? vAvg.toFixed(1) : ''}</span><span class="user-rating-count">${vAvg > 0 ? `(${vTotal}票)` : '未投票'}</span></div>
           </div>
           ${tags.length ? `<div class="tags">${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
         </div>
@@ -2647,11 +2673,9 @@ function applyFiltersAndSort() {
   switch (currentSort) {
     case 'year-desc':   visible.sort((a,b)=>parseInt(b.dataset.year)-parseInt(a.dataset.year)); break;
     case 'year-asc':    visible.sort((a,b)=>parseInt(a.dataset.year)-parseInt(b.dataset.year)); break;
-    case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.rating)-parseFloat(a.dataset.rating)); break;
+    case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.ratingDecimal||0)-parseFloat(a.dataset.ratingDecimal||0)); break; // けんけんぱ評価（小数で正確に比較）
     case 'title-asc':   visible.sort((a,b)=>a.dataset.titleJp.localeCompare(b.dataset.titleJp,'ja')); break;
-    // ★【改善】みんなの評価・未視聴数ソートを追加
     case 'vavg-desc':   visible.sort((a,b)=>parseFloat(b.dataset.vAvg||0)-parseFloat(a.dataset.vAvg||0)); break;
-    case 'likes-desc':  visible.sort((a,b)=>parseInt(b.dataset.likes||0)-parseInt(a.dataset.likes||0)); break;
   }
 
   const listEl = document.getElementById('drama-list');

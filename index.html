@@ -118,7 +118,7 @@ body {
   position: static;
   display: inline-flex;
   align-items: center;
-  width: 260px;
+  width: 180px; /* 260px→180px 使い方ボタンのスペース確保 */
   margin-bottom: 0;
   z-index: auto;
   background: var(--surface);
@@ -148,6 +148,18 @@ body {
   white-space: nowrap;
 }
 .search-btn:hover { opacity: 0.85; }
+.search-clear-btn {
+  flex-shrink: 0;
+  background: transparent;
+  color: #555;
+  border: none;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 0 2px 2px;
+  transition: color .15s;
+}
+.search-clear-btn:hover { color: #c9a84c; }
 .search-bar-icon { font-size: 12px; opacity: 0.35; flex-shrink: 0; }
 .search-bar {
   flex: 1;
@@ -510,8 +522,10 @@ body {
   font-size: 12px; padding: 5px 14px; border-radius: 20px;
   border: 1px solid rgba(255,255,255,0.1);
   background: transparent; color: #777; cursor: pointer;
-  letter-spacing: 0.04em; transition: all 0.15s;
+  letter-spacing: 0.03em; transition: all 0.15s;
   font-family: 'Noto Sans JP', sans-serif;
+  white-space: nowrap; flex-shrink: 0;
+  line-height: 1.4;
 }
 .chip:hover { border-color: var(--gold); color: var(--gold); }
 .chip.active { background: var(--gold); color: var(--bg); border-color: var(--gold); font-weight: 700; }
@@ -864,7 +878,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   border-top: 0px solid var(--border);
 }
 .card-detail.open {
-  max-height: 600px; /* P13改善: 1400px→600px 閉じる速度が自然に */
+  /* max-heightはJSで実際の高さをセット */
   border-top: 1px solid var(--border);
 }
 .radar-section {
@@ -908,11 +922,11 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   transition: all 0.2s;
   margin-top: 4px;
 }
-.like-btn:hover { border-color: #e05a7a; color: #e05a7a; }
+.like-btn:hover { border-color: #c9a84c; color: #c9a84c; }
 .like-btn.liked {
-  background: rgba(106,159,216,0.1);
-  border-color: #6a9fd8;
-  color: #6a9fd8;
+  background: rgba(201,168,76,0.12);
+  border-color: rgba(201,168,76,0.5);
+  color: #c9a84c;
 }
 .like-btn .like-icon { font-size: 14px; }
 .like-btn .like-count { font-weight: 700; }
@@ -1011,7 +1025,9 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .site-header, .controls, main { padding-left: 1rem; padding-right: 1rem; }
   .site-title { font-size: 24px; }
   .site-header-top { flex-direction: column; align-items: flex-start; gap: .5rem; }
-  .site-header-top .search-bar-wrap { width: 100%; align-self: auto; }
+  .site-header-top > div:last-child { width: 100%; display: flex; gap: 8px; align-items: center; }
+  .site-header-top .search-bar-wrap { width: auto; flex: 1; align-self: auto; }
+  .usage-btn { flex-shrink: 0; }
   .site-header-bottom { gap: 1rem; }
   .header-stats { gap: 1rem; }
   .card-poster { width: 100px; min-width: 100px; height: 100px; }
@@ -1253,7 +1269,129 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   background: #01b4e4;
   border-radius: 50%;
 }
-/* ソートインラインボタン */
+/* 使い方ボタン */
+.usage-btn {
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: transparent;
+  color: #666;
+  font-family: 'Noto Sans JP', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all .18s;
+  letter-spacing: .04em;
+  align-self: flex-end;
+}
+.usage-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* 使い方モーダル */
+.usage-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,.8);
+  backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.usage-overlay.open { display: flex; }
+.usage-modal {
+  background: #111;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: lbIn .22s ease;
+}
+.usage-header {
+  background: linear-gradient(135deg, #0d1a2a 0%, #1a1200 100%);
+  padding: 1.5rem 1.5rem 1.25rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  flex-shrink: 0;
+}
+.usage-eyebrow {
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: #6b5d3f; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.usage-eyebrow::before { content: ''; display: block; width: 16px; height: 1px; background: #6b5d3f; }
+.usage-title { font-size: 18px; font-weight: 700; color: #f0ebe0; letter-spacing: -.02em; line-height: 1.3; }
+.usage-title em { color: #c9a84c; font-style: normal; }
+.usage-sub { font-size: 11px; color: #555; margin-top: 4px; }
+.usage-steps {
+  padding: 1rem 1.5rem;
+  display: flex; flex-direction: column; gap: 0;
+  overflow-y: auto; flex: 1;
+}
+.usage-step {
+  display: flex; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.usage-step:last-child { border-bottom: none; }
+.usage-step-num {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(201,168,76,.12); border: 1px solid rgba(201,168,76,.3);
+  color: #c9a84c; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+}
+.usage-step-icon { font-size: 16px; margin-bottom: 3px; }
+.usage-step-label { font-size: 13px; font-weight: 500; color: #f0ebe0; margin-bottom: 3px; }
+.usage-step-desc { font-size: 11px; color: #666; line-height: 1.6; }
+.usage-step-desc em { color: #c9a84c; font-style: normal; }
+.usage-step-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px; }
+.usage-step-tag {
+  font-size: 9px; padding: 2px 8px; border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.1); color: #666; background: transparent;
+}
+.usage-step-tag.gold { background: rgba(201,168,76,.1); border-color: rgba(201,168,76,.3); color: #c9a84c; }
+.usage-footer {
+  padding: 1rem 1.5rem;
+  background: #0e0e0e;
+  border-top: 1px solid rgba(255,255,255,.05);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.usage-footer-note { font-size: 10px; color: #444; }
+.usage-close-btn {
+  background: #c9a84c; color: #0a0a0a;
+  border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700;
+  padding: 7px 20px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: background .15s;
+}
+.usage-close-btn:hover { background: #dfc06a; }
+
+/* ===== ランキングバッジ ===== */
+.rank-badge {
+  width: 40px; flex-shrink: 0; display: none;
+  flex-direction: column; align-items: center; justify-content: center;
+  padding: 0; gap: 1px; text-align: center;
+}
+.drama-card.show-rank .rank-badge { display: flex; }
+.rank-crown { font-size: 12px; line-height: 1; }
+.rank-num { font-size: 15px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.rank-1 .rank-crown { color: #FFD700; }
+.rank-1 .rank-num   { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,.35); }
+.rank-2 .rank-crown { color: #C0C0C0; }
+.rank-2 .rank-num   { color: #C0C0C0; }
+.rank-3 .rank-crown { color: #CD7F32; }
+.rank-3 .rank-num   { color: #CD7F32; }
+.rank-other .rank-num { color: #444; font-size: 13px; }
+.drama-card.rank-gold   { background: linear-gradient(90deg, rgba(255,215,0,.05) 0%, var(--surface) 55%); border-color: rgba(255,215,0,.2) !important; }
+.drama-card.rank-silver { background: linear-gradient(90deg, rgba(192,192,192,.04) 0%, var(--surface) 55%); border-color: rgba(192,192,192,.15) !important; }
+.drama-card.rank-bronze { background: linear-gradient(90deg, rgba(205,127,50,.04) 0%, var(--surface) 55%); border-color: rgba(205,127,50,.15) !important; }
+
 .sort-inline-btn {
   font-size: 11px;
   padding: 4px 11px;
@@ -1395,12 +1533,16 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div>
       <div class="eyebrow">drama reviews</div>
       <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
-      <div class="site-desc">私の個人的な感想と評価を記録する場所</div>
+      <div class="site-desc">私の個人的な評価を記録する場所</div>
     </div>
-    <div class="search-bar-wrap" style="align-self:flex-end">
-      <span class="search-bar-icon">🔍</span>
-      <input type="text" class="search-bar" id="search-input" placeholder="検索...">
-      <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
+    <div style="display:flex; align-items:flex-end; gap:8px;">
+      <div class="search-bar-wrap" style="align-self:flex-end">
+        <span class="search-bar-icon">🔍</span>
+        <input type="text" class="search-bar" id="search-input" placeholder="検索...">
+        <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
+        <button class="search-clear-btn" id="search-clear-btn" aria-label="クリア" style="display:none">✕</button>
+      </div>
+      <button id="usage-btn" class="usage-btn" aria-label="使い方">使い方</button>
     </div>
   </div>
   <div class="site-header-bottom">
@@ -1755,9 +1897,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <main>
-<!-- コントロールバー：1行目（機能ボタン＋ソート） -->
+<!-- コントロールバー：3行構成 -->
 <div class="search-and-controls">
-  <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:wrap;">
+  <!-- 1行目：機能ボタン＋件数 -->
+  <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:nowrap;">
     <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer">🎭 気分で選ぶ</button>
     <button id="filter-button" class="filter-button">🔽 フィルター</button>
     <button id="admin-button" class="admin-button">＋ 追加</button>
@@ -1767,22 +1910,23 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <button id="mood-clear-tag-btn" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;" aria-label="気分をクリア">✕</button>
     </span>
     <div id="active-filter-tags" class="active-filter-tags"></div>
-    <span class="result-count" id="result-count"></span>
+    <span class="result-count" id="result-count" style="margin-left:auto;flex-shrink:0;"></span>
   </div>
-  <!-- ソートボタン（横スクロール対応） -->
-  <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:5px 0 4px; margin-top:4px; scrollbar-width:none; -webkit-overflow-scrolling:touch;">
-    <span style="font-size:10px; color:#6b5d3f; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;">並び順</span>
+  <!-- 2行目：国チップ横スクロール -->
+  <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:5px 0 4px; margin-top:5px; scrollbar-width:none; -webkit-overflow-scrolling:touch;">
+    <button class="chip active" data-filter="all">すべて</button>
+    <span id="country-chips" style="display:contents;"></span>
+  </div>
+  <!-- 3行目：ソートボタン横スクロール -->
+  <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:4px 0 6px; scrollbar-width:none; -webkit-overflow-scrolling:touch;">
+    <span style="font-size:9px; color:#6b5d3f; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; flex-shrink:0;">並び順</span>
     <button class="sort-inline-btn active" data-sort="year-desc">📅 新しい順</button>
-    <button class="sort-inline-btn" data-sort="rating-desc">⭐ 評価：高い順</button>
-    <button class="sort-inline-btn" data-sort="vavg-desc">👥 みんな評価</button>
+    <button class="sort-inline-btn" data-sort="rating-desc">⭐ 評価順</button>
+    <button class="sort-inline-btn" data-sort="likes-desc">🔖 気になる順</button>
+    <button class="sort-inline-btn" data-sort="vavg-desc">👥 みんな</button>
     <button class="sort-inline-btn" data-sort="title-asc">🔤 あいうえお順</button>
     <button class="sort-inline-btn" data-sort="year-asc">📅 古い順</button>
     <button class="sort-inline-btn" data-sort="default">🔄 デフォルト</button>
-  </div>
-  <!-- 2行目：すべて＋国チップ -->
-  <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding-bottom:2px; margin-top:6px; margin-bottom:1rem; scrollbar-width:none;">
-    <button class="chip active" data-filter="all">すべて</button>
-    <span id="country-chips" style="display:contents;"></span>
   </div>
 </div>
 
@@ -1828,6 +1972,77 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div class="skeleton-card" aria-hidden="true"><div class="skeleton-poster skeleton-line"></div><div class="skeleton-body"><div class="skeleton-line w80"></div><div class="skeleton-line w55"></div><div class="skeleton-line w35"></div></div></div>
   </div>
 </main>
+
+<!-- 使い方モーダル -->
+<div id="usage-overlay" class="usage-overlay" role="dialog" aria-modal="true" aria-label="使い方">
+  <div class="usage-modal">
+    <div class="usage-header">
+      <div class="usage-eyebrow">how to use</div>
+      <div class="usage-title">けんけんぱの<br><em>ドラマレビュー</em> の使い方</div>
+      <div class="usage-sub">このサイトでできることを簡単にご紹介します</div>
+    </div>
+    <div class="usage-steps">
+      <div class="usage-step">
+        <div class="usage-step-num">1</div>
+        <div>
+          <div class="usage-step-icon">🎬</div>
+          <div class="usage-step-label">ドラマをタップして詳細を見る</div>
+          <div class="usage-step-desc">カードをタップするとあらすじ・感想・スコアが展開します。ポスター画像をタップすると<em>大きく表示</em>できます。</div>
+        </div>
+      </div>
+      <div class="usage-step">
+        <div class="usage-step-num">2</div>
+        <div>
+          <div class="usage-step-icon">⭐</div>
+          <div class="usage-step-label">けんけんぱの評価を確認する</div>
+          <div class="usage-step-desc">ストーリー・キャスト・映像美・音楽・満足度の<em>5項目</em>で評価しています。半星（✩）まで細かく表示されます。</div>
+        </div>
+      </div>
+      <div class="usage-step">
+        <div class="usage-step-num">3</div>
+        <div>
+          <div class="usage-step-icon">👥</div>
+          <div class="usage-step-label">みんなで評価に参加する</div>
+          <div class="usage-step-desc">各ドラマに<em>1〜5の星で投票</em>できます。みんなの平均評価として集計されます。1作品につき1票のみ。</div>
+        </div>
+      </div>
+      <div class="usage-step">
+        <div class="usage-step-num">4</div>
+        <div>
+          <div class="usage-step-icon">🔖</div>
+          <div class="usage-step-label">「気になる」で気になる作品を記録</div>
+          <div class="usage-step-desc">「気になる」ボタンを押すと<em>気になる数がカウント</em>されます。みんなが注目している作品がひと目でわかります。</div>
+        </div>
+      </div>
+      <div class="usage-step">
+        <div class="usage-step-num">5</div>
+        <div>
+          <div class="usage-step-icon">🎭</div>
+          <div class="usage-step-label">気分で今夜見るドラマを選ぶ</div>
+          <div class="usage-step-desc">「<em>気分で選ぶ</em>」から今夜の気分を選ぶと、ぴったりの作品に絞り込めます。</div>
+          <div class="usage-step-tags">
+            <span class="usage-step-tag gold">😭 泣きたい</span>
+            <span class="usage-step-tag">😂 笑いたい</span>
+            <span class="usage-step-tag">💓 恋愛したい</span>
+            <span class="usage-step-tag">🌙 サクッと見たい</span>
+          </div>
+        </div>
+      </div>
+      <div class="usage-step">
+        <div class="usage-step-num">6</div>
+        <div>
+          <div class="usage-step-icon">🔽</div>
+          <div class="usage-step-label">フィルター・ソートで絞り込む</div>
+          <div class="usage-step-desc">国・ジャンル・評価・年代・配信サービスで絞り込めます。並び順も「<em>新しい順・評価順</em>」などに変更できます。</div>
+        </div>
+      </div>
+    </div>
+    <div class="usage-footer">
+      <div class="usage-footer-note">© 2026 けんけんぱのドラマレビュー</div>
+      <button class="usage-close-btn" id="usage-close-btn">さっそく見る →</button>
+    </div>
+  </div>
+</div>
 
 <!-- ライトボックス -->
 <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="画像拡大表示">
@@ -2311,11 +2526,11 @@ async function handleLike(btn) {
     if (data.success) {
       btn.querySelector('.like-count').textContent = data.likes;
       if (isLiked) {
-        btn.querySelector('.like-label').textContent = ' 未視聴';
+        btn.querySelector('.like-label').textContent = ' 気になる';
         btn.classList.remove('liked');
         likedTitles.delete(title);
       } else {
-        btn.querySelector('.like-label').textContent = ' 未視聴設定済';
+        btn.querySelector('.like-label').textContent = ' 気になる！設定済';
         btn.classList.add('liked');
         likedTitles.add(title);
       }
@@ -2327,7 +2542,7 @@ async function handleLike(btn) {
     }
   } catch(e) {
     // ★【改善】エラー時も視覚フィードバックを出す
-    console.warn('いいね送信失敗:', e);
+    console.warn('気になる送信失敗:', e);
   } finally {
     btn.classList.remove('loading');
     btn.disabled = false; // ★【改善】finally で確実に解除
@@ -2384,11 +2599,30 @@ function getGenreValues(containerId) {
 }
 
 function toggleCard(header) {
-  const detail = header.nextElementSibling;
+  const detail  = header.nextElementSibling;
   const chevron = header.querySelector('.card-chevron');
-  detail.classList.toggle('open');
-  chevron.classList.toggle('open');
-  if (detail.classList.contains('open')) {
+  const isOpen  = detail.classList.contains('open');
+
+  if (isOpen) {
+    // 閉じる：現在の高さ→0
+    detail.style.maxHeight = detail.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      detail.style.maxHeight = '0';
+      detail.classList.remove('open');
+      chevron.classList.remove('open');
+    });
+  } else {
+    // 開く：0→実際の高さ（制限なし）
+    detail.classList.add('open');
+    chevron.classList.add('open');
+    detail.style.maxHeight = detail.scrollHeight + 'px';
+    // アニメーション完了後にnoneにして動的コンテンツにも対応
+    detail.addEventListener('transitionend', function onEnd() {
+      if (detail.classList.contains('open')) {
+        detail.style.maxHeight = 'none';
+      }
+      detail.removeEventListener('transitionend', onEnd);
+    });
     const card = header.closest('.drama-card');
     drawRadarChart(card);
     setTimeout(restoreVotes, 50);
@@ -2597,6 +2831,7 @@ function createCard(row) {
       <input type="checkbox" onchange="toggleSelect(event, this.parentElement)" onclick="event.stopPropagation()">
     </div>
     <div class="card-header" onclick="toggleCard(this)">
+      <div class="rank-badge"><span class="rank-crown"></span><span class="rank-num"></span></div>
       <div class="card-poster">${posterHtml}</div>
       <div class="card-header-info">
         <div class="card-title-row">
@@ -2643,8 +2878,9 @@ function createCard(row) {
         </div>
         ${review ? `<div class="card-review">${esc(review)}</div>` : ''}
         <div class="card-bottom-action">
-          <button class="like-btn" title="未視聴（押すと設定／もう一度押すと解除）" data-title="${esc(title)}" onclick="handleLike(this)">
-            <span class="like-count">0</span><span class="like-label"> 未視聴</span>
+          <button class="like-btn" title="気になる（押すと設定／もう一度押すと解除）" data-title="${esc(title)}" onclick="handleLike(this)">
+            <span class="like-count">0</span><span class="like-label"> 気になる</span>
+          </button>
           </button>
           <div class="vote-section" data-title="${esc(title)}">
             <span class="vote-label">あなたの評価：</span>
@@ -2681,7 +2917,7 @@ function applyFiltersAndSort() {
     const rOk = selR.length===0 || selR.includes(parseFloat(card.dataset.rating));
     const dOk = selD.length===0 || selD.includes(card.dataset.decade);
     const chipOk = currentCountryFilter==='all' || card.dataset.country===currentCountryFilter;
-    const qOk = !q || [card.dataset.titleJp, card.dataset.cast, card.dataset.genre]
+    const qOk = !q || [card.dataset.titleJp, card.dataset.cast, card.dataset.genre, card.dataset.summary, card.dataset.review]
       .some(v => v && v.toLowerCase().includes(q));
     const gOk = selG.length===0 || selG.some(g => (card.dataset.genre||'').includes(g));
     const sOk = selS.length===0 || selS.some(s => (card.dataset.streaming||'').includes(s));
@@ -2692,7 +2928,8 @@ function applyFiltersAndSort() {
   switch (currentSort) {
     case 'year-desc':   visible.sort((a,b)=>parseInt(b.dataset.year)-parseInt(a.dataset.year)); break;
     case 'year-asc':    visible.sort((a,b)=>parseInt(a.dataset.year)-parseInt(b.dataset.year)); break;
-    case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.ratingDecimal||0)-parseFloat(a.dataset.ratingDecimal||0)); break; // けんけんぱ評価（小数で正確に比較）
+    case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.ratingDecimal||0)-parseFloat(a.dataset.ratingDecimal||0)); break;
+    case 'likes-desc':  visible.sort((a,b)=>parseInt(b.dataset.likes||0)-parseInt(a.dataset.likes||0)); break;
     case 'title-asc':   visible.sort((a,b)=>a.dataset.titleJp.localeCompare(b.dataset.titleJp,'ja')); break;
     case 'vavg-desc':   visible.sort((a,b)=>parseFloat(b.dataset.vAvg||0)-parseFloat(a.dataset.vAvg||0)); break;
   }
@@ -2704,6 +2941,29 @@ function applyFiltersAndSort() {
   } else {
     visible.forEach(c => listEl.appendChild(c));
   }
+  // ランキングバッジ表示（評価順・気になる順のみ）
+  const showRank = (currentSort === 'rating-desc' || currentSort === 'likes-desc');
+  visible.forEach((card, i) => {
+    const rank = i + 1;
+    const badge  = card.querySelector('.rank-badge');
+    const crown  = card.querySelector('.rank-crown');
+    const numEl  = card.querySelector('.rank-num');
+    // 色クラスをリセット
+    card.classList.remove('rank-gold', 'rank-silver', 'rank-bronze', 'show-rank');
+    badge.className = 'rank-badge';
+    if (showRank && rank <= 10) {
+      card.classList.add('show-rank');
+      if (rank === 1) { badge.classList.add('rank-1'); crown.textContent = '👑'; card.classList.add('rank-gold'); }
+      else if (rank === 2) { badge.classList.add('rank-2'); crown.textContent = '👑'; card.classList.add('rank-silver'); }
+      else if (rank === 3) { badge.classList.add('rank-3'); crown.textContent = '👑'; card.classList.add('rank-bronze'); }
+      else { badge.classList.add('rank-other'); crown.textContent = ''; }
+      numEl.textContent = rank;
+    } else {
+      crown.textContent = '';
+      numEl.textContent = '';
+    }
+  });
+
   document.getElementById('result-count').textContent = currentMood
     ? `${visible.length}作品（気分フィルター中）`
     : `${visible.length}作品`;
@@ -2872,7 +3132,7 @@ async function loadDramaData() {
       btn.querySelector('.like-count').textContent = count;
       if (likedTitles.has(title)) {
         btn.classList.add('liked');
-        btn.querySelector('.like-label').textContent = ' 未視聴設定済';
+        btn.querySelector('.like-label').textContent = ' 気になる！設定済';
       }
     });
 
@@ -2889,9 +3149,24 @@ async function loadDramaData() {
     }
 
     // 検索BOX
-    const searchInput = document.getElementById('search-input');
+    const searchInput    = document.getElementById('search-input');
+    const searchClearBtn = document.getElementById('search-clear-btn');
     if (searchInput) {
-      searchInput.addEventListener('input', () => { applyFiltersAndSort(); });
+      searchInput.addEventListener('input', () => {
+        applyFiltersAndSort();
+        // 文字が入っているときだけクリアボタンを表示
+        if (searchClearBtn) {
+          searchClearBtn.style.display = searchInput.value ? 'inline-block' : 'none';
+        }
+      });
+    }
+    if (searchClearBtn) {
+      searchClearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClearBtn.style.display = 'none';
+        searchInput.focus();
+        applyFiltersAndSort();
+      });
     }
 
     // ジャンルグリッド初期化（追加・編集フォーム）
@@ -2940,6 +3215,44 @@ lightbox.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox();
 });
+
+// ===== 使い方モーダル =====
+const usageOverlay  = document.getElementById('usage-overlay');
+const usageBtn      = document.getElementById('usage-btn');
+const usageCloseBtn = document.getElementById('usage-close-btn');
+const USAGE_SEEN_KEY = 'usageGuideSeen';
+
+function openUsageModal() {
+  usageOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeUsageModal() {
+  usageOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  localStorage.setItem(USAGE_SEEN_KEY, '1');
+}
+
+// 「使い方」ボタンで開く
+usageBtn.addEventListener('click', openUsageModal);
+
+// 「さっそく見る」ボタンで閉じる
+usageCloseBtn.addEventListener('click', closeUsageModal);
+
+// 背景クリックで閉じる
+usageOverlay.addEventListener('click', e => {
+  if (e.target === usageOverlay) closeUsageModal();
+});
+
+// Escキーで閉じる
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && usageOverlay.classList.contains('open')) closeUsageModal();
+});
+
+// 初回訪問時に自動表示（localStorageに記録がない場合のみ）
+if (!localStorage.getItem(USAGE_SEEN_KEY)) {
+  // データ読み込み後に表示（少し遅延させて自然に見せる）
+  setTimeout(openUsageModal, 800);
+}
 
 // ===== 気分フィルター =====
 let currentMood = null;

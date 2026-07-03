@@ -3363,6 +3363,7 @@ async function loadDramaData() {
     const likes  = data.likes  || {};
 
     listEl.innerHTML = '';
+    allCards = []; // リセット（再読み込み時に重複しないよう）
     if (dramas.length === 0) {
       listEl.innerHTML = '<div class="no-results">レビューデータが見つかりませんでした。</div>';
       return;

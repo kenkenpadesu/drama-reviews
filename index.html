@@ -3198,8 +3198,12 @@ function applyFiltersAndSort() {
 
   const listEl = document.getElementById('drama-list');
 
-  // display:none方式（DOMを作り直さず表示切替のみ）
-  allCards.forEach(card => { card.style.display = 'none'; card.style.order = ''; });
+  // 初回：DOMにまだないカードを追加
+  allCards.forEach(card => {
+    if (!card.parentElement) listEl.appendChild(card);
+    card.style.display = 'none';
+    card.style.order = '';
+  });
 
   if (visible.length === 0) {
     let noRes = listEl.querySelector('.no-results');

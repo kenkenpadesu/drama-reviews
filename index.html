@@ -1025,8 +1025,8 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   .site-header, .controls, main { padding-left: 1rem; padding-right: 1rem; }
   .site-title { font-size: 24px; }
   .site-header-top { flex-direction: column; align-items: flex-start; gap: .5rem; }
-  .site-header-top > div:last-child { width: 100%; display: flex; gap: 8px; align-items: center; }
-  .site-header-top .search-bar-wrap { width: auto; flex: 1; align-self: auto; }
+  .site-header-top > div:last-child { width: 100%; }
+  .site-header-top .search-bar-wrap { flex: 1; min-width: 0; width: auto; align-self: auto; }
   .usage-btn { flex-shrink: 0; }
   .site-header-bottom { gap: 1rem; }
   .header-stats { gap: 1rem; }
@@ -1535,14 +1535,14 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <div class="site-title">けんけんぱの<br><em>ドラマレビュー</em></div>
       <div class="site-desc">私の個人的な評価を記録する場所</div>
     </div>
-    <div style="display:flex; align-items:flex-end; gap:8px;">
-      <div class="search-bar-wrap" style="align-self:flex-end">
+    <div style="display:flex; align-items:center; gap:6px; align-self:flex-end; min-width:0; width:100%;">
+      <div class="search-bar-wrap" style="flex:1; min-width:0; width:auto;">
         <span class="search-bar-icon">🔍</span>
         <input type="text" class="search-bar" id="search-input" placeholder="検索...">
         <button class="search-btn" id="search-btn" aria-label="検索">検索</button>
         <button class="search-clear-btn" id="search-clear-btn" aria-label="クリア" style="display:none">✕</button>
       </div>
-      <button id="usage-btn" class="usage-btn" aria-label="使い方">使い方</button>
+      <button id="usage-btn" class="usage-btn" aria-label="使い方" style="flex-shrink:0;">使い方</button>
     </div>
   </div>
   <div class="site-header-bottom">
@@ -1900,17 +1900,17 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 <!-- コントロールバー：3行構成 -->
 <div class="search-and-controls">
   <!-- 1行目：機能ボタン＋件数 -->
-  <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:nowrap;">
-    <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer">🎭 気分で選ぶ</button>
-    <button id="filter-button" class="filter-button">🔽 フィルター</button>
-    <button id="admin-button" class="admin-button">＋ 追加</button>
-    <button id="delete-mode-button" class="admin-button">🗑 削除</button>
-    <span id="mood-active-tag" style="display:none; align-items:center; gap:4px; font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:#c9a84c;">
+  <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;">
+    <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer" style="flex-shrink:0;">🎭 気分で選ぶ</button>
+    <button id="filter-button" class="filter-button" style="flex-shrink:0;">🔽 フィルター</button>
+    <button id="admin-button" class="admin-button" style="flex-shrink:0;">＋ 追加</button>
+    <button id="delete-mode-button" class="admin-button" style="flex-shrink:0;">🗑 削除</button>
+    <span id="mood-active-tag" style="display:none; align-items:center; gap:4px; font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:#c9a84c; flex-shrink:0;">
       <span id="mood-active-label"></span>
       <button id="mood-clear-tag-btn" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;" aria-label="気分をクリア">✕</button>
     </span>
-    <div id="active-filter-tags" class="active-filter-tags"></div>
-    <span class="result-count" id="result-count" style="margin-left:auto;flex-shrink:0;"></span>
+    <div id="active-filter-tags" class="active-filter-tags" style="flex-shrink:0;"></div>
+    <span class="result-count" id="result-count" style="margin-left:auto; flex-shrink:0; white-space:nowrap;"></span>
   </div>
   <!-- 2行目：国チップ横スクロール -->
   <div style="display:flex; gap:6px; align-items:center; flex-wrap:nowrap; overflow-x:auto; padding:5px 0 4px; margin-top:5px; scrollbar-width:none; -webkit-overflow-scrolling:touch;">

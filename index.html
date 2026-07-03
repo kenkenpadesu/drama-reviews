@@ -1405,7 +1405,134 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 .drama-card.rank-silver { background: linear-gradient(90deg, rgba(192,192,192,.04) 0%, var(--surface) 55%); border-color: rgba(192,192,192,.15) !important; }
 .drama-card.rank-bronze { background: linear-gradient(90deg, rgba(205,127,50,.04) 0%, var(--surface) 55%); border-color: rgba(205,127,50,.15) !important; }
 
-/* ===== 予告編ボタン ===== */
+/* ===== 更新ボタン ===== */
+#refresh-btn:hover { border-color: var(--gold); color: var(--gold); }
+#refresh-btn.spinning { animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== TOPに戻るボタン ===== */
+#back-to-top {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #c9a84c;
+  color: #0a0a0a;
+  border: none;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 900;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+#back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+#back-to-top:hover { background: #dfc06a; transform: translateY(-2px); }
+
+/* ===== スティッキーコントロールバー ===== */
+#sticky-controls {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 800;
+  background: rgba(10,10,10,.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 0.5px solid rgba(255,255,255,.08);
+  padding: 6px 2rem;
+  transform: translateY(-100%);
+  transition: transform .25s ease;
+  max-width: none;
+}
+#sticky-controls.visible { transform: translateY(0); }
+.sticky-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sticky-row1 {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sticky-row2 {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sticky-chip {
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all .15s;
+}
+.sticky-chip.active { background: #c9a84c; border-color: #c9a84c; color: #0a0a0a; font-weight: 700; }
+.sticky-sort-btn {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 20px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  background: transparent;
+  color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all .15s;
+}
+.sticky-sort-btn.active { background: rgba(201,168,76,.12); border-color: rgba(201,168,76,.4); color: #c9a84c; }
+.sticky-filter-btn {
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 5px;
+  border: 0.5px solid rgba(255,255,255,.12);
+  background: transparent;
+  color: #777;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif;
+  transition: all .15s;
+}
+.sticky-filter-btn:hover { border-color: var(--gold); color: var(--gold); }
+.sticky-sort-label {
+  font-size: 8px;
+  color: #6b5d3f;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 639px) {
+  #sticky-controls { padding: 5px 1rem; }
+}
 .trailer-btn {
   display: inline-flex; align-items: center; gap: 5px;
   background: transparent; border: 1px solid rgba(255,0,0,.25);
@@ -1618,7 +1745,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
       <div class="stat"><div class="stat-num" id="total-count">—</div><div class="stat-label">作品</div></div>
       <div class="stat"><div class="stat-num" id="avg-rating">—</div><div class="stat-label">平均評価</div></div>
     </div>
-    <div class="last-updated" style="margin-left:auto">最終更新：<span id="last-updated-html">読込中...</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</div>
+    <div class="last-updated" style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+      <span>最終更新：<span id="last-updated-html">読込中...</span>（サイト） / <span id="last-updated-data">読込中...</span>（データ）</span>
+      <button id="refresh-btn" title="データを再読み込み" style="background:transparent;border:1px solid rgba(255,255,255,.12);color:#555;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;font-family:inherit;">↻</button>
+    </div>
   </div>
 </header>
 
@@ -2116,6 +2246,33 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
     <div class="usage-footer">
       <div class="usage-footer-note">© 2026 けんけんぱのドラマレビュー</div>
       <button class="usage-close-btn" id="usage-close-btn">さっそく見る →</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOPに戻るボタン -->
+<button id="back-to-top" aria-label="TOPに戻る">↑</button>
+
+<!-- スティッキーコントロールバー -->
+<div id="sticky-controls" aria-hidden="true">
+  <div class="sticky-inner">
+    <div class="sticky-row1">
+      <button class="sticky-filter-btn" id="sticky-mood-btn">🎭 気分で選ぶ</button>
+      <button class="sticky-filter-btn" id="sticky-filter-btn">🔽 フィルター</button>
+      <div style="width:1px;height:14px;background:rgba(255,255,255,.1);flex-shrink:0;margin:0 2px;"></div>
+      <button class="sticky-chip active" data-filter="all" id="sticky-all-chip">すべて</button>
+      <span id="sticky-country-chips" style="display:contents;"></span>
+      <span id="sticky-result-count" style="font-size:10px;color:#444;margin-left:auto;flex-shrink:0;white-space:nowrap;"></span>
+    </div>
+    <div class="sticky-row2">
+      <span class="sticky-sort-label">並び順</span>
+      <button class="sticky-sort-btn active" data-sort="year-desc">📅 新しい順</button>
+      <button class="sticky-sort-btn" data-sort="rating-desc">⭐ 評価順</button>
+      <button class="sticky-sort-btn" data-sort="likes-desc">🔖 気になる順</button>
+      <button class="sticky-sort-btn" data-sort="vavg-desc">👥 みんな</button>
+      <button class="sticky-sort-btn" data-sort="title-asc">🔤 あいうえお順</button>
+      <button class="sticky-sort-btn" data-sort="year-asc">📅 古い順</button>
+      <button class="sticky-sort-btn" data-sort="default">🔄 デフォルト</button>
     </div>
   </div>
 </div>
@@ -2666,6 +2823,8 @@ function buildCountryChips() {
       applyFiltersAndSort();
     });
   });
+  // スティッキーバーの国チップを同期
+  setTimeout(syncStickyCountryChips, 0);
 }
 
 
@@ -3363,6 +3522,111 @@ trailerOverlay.addEventListener('click', e => { if (e.target === trailerOverlay)
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && trailerOverlay.classList.contains('open')) closeTrailer();
 });
+
+// ===== 更新ボタン =====
+document.getElementById('refresh-btn').addEventListener('click', () => {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  loadDramaData().finally(() => {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  });
+});
+
+// ===== TOPに戻るボタン =====
+const backToTopBtn = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 300) {
+    backToTopBtn.classList.add('visible');
+  } else {
+    backToTopBtn.classList.remove('visible');
+  }
+}, { passive: true });
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ===== スティッキーコントロールバー =====
+const stickyControls  = document.getElementById('sticky-controls');
+const mainControls    = document.querySelector('.search-and-controls');
+
+// ヘッダーが見えなくなったら表示
+const stickyObserver = new IntersectionObserver(([entry]) => {
+  if (!entry.isIntersecting) {
+    stickyControls.classList.add('visible');
+    stickyControls.removeAttribute('aria-hidden');
+  } else {
+    stickyControls.classList.remove('visible');
+    stickyControls.setAttribute('aria-hidden', 'true');
+  }
+}, { threshold: 0 });
+
+if (mainControls) stickyObserver.observe(mainControls);
+
+// スティッキーバーの国チップ同期（buildCountryChipsで呼ばれる）
+function syncStickyCountryChips() {
+  const src = document.getElementById('country-chips');
+  const dst = document.getElementById('sticky-country-chips');
+  if (!src || !dst) return;
+  dst.innerHTML = '';
+  src.querySelectorAll('.chip').forEach(chip => {
+    const clone = chip.cloneNode(true);
+    clone.classList.add('sticky-chip');
+    clone.addEventListener('click', () => {
+      // 元のチップをクリックして同期
+      chip.click();
+    });
+    dst.appendChild(clone);
+  });
+}
+
+// スティッキーバーの「すべて」チップ
+document.getElementById('sticky-all-chip').addEventListener('click', () => {
+  document.querySelector('.chip[data-filter="all"]')?.click();
+});
+
+// スティッキーバーの気分・フィルターボタン
+document.getElementById('sticky-mood-btn').addEventListener('click', () => {
+  document.getElementById('mood-toggle-btn')?.click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.getElementById('sticky-filter-btn').addEventListener('click', () => {
+  document.getElementById('filter-button')?.click();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// スティッキーバーのソートボタン同期
+document.querySelectorAll('.sticky-sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    // 元のソートボタンと同期
+    const sort = btn.dataset.sort;
+    document.querySelectorAll('.sort-inline-btn').forEach(orig => {
+      if (orig.dataset.sort === sort) orig.click();
+    });
+    // スティッキーバーのアクティブ状態を更新
+    document.querySelectorAll('.sticky-sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ソートボタンのアクティブ状態をスティッキーバーに反映
+document.querySelectorAll('.sort-inline-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sort = btn.dataset.sort;
+    document.querySelectorAll('.sticky-sort-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.sort === sort);
+    });
+  });
+});
+
+// 件数をスティッキーバーにも反映
+const origResultCount = document.getElementById('result-count');
+const stickyResultCount = document.getElementById('sticky-result-count');
+const resultObserver = new MutationObserver(() => {
+  if (stickyResultCount) stickyResultCount.textContent = origResultCount.textContent;
+});
+if (origResultCount) resultObserver.observe(origResultCount, { childList: true, characterData: true, subtree: true });
 
 // ===== 使い方モーダル =====
 const usageOverlay  = document.getElementById('usage-overlay');

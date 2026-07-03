@@ -563,13 +563,8 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   overflow: hidden;
   margin-bottom: 8px;
   transition: border-color 0.2s;
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
 }
-/* card-headerとrank-badgeが横並び、card-detailが下段全幅 */
-.drama-card .rank-badge { align-self: center; }
-.drama-card .card-checkbox-wrap { align-self: center; }
+/* rank-badge がない時はcard-headerが全幅 */
 .drama-card .card-header { flex: 1; min-width: 0; }
 .card-detail { width: 100%; }
 /* P02改善: 国別の左ボーダーアクセント */
@@ -1389,12 +1384,14 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  align-self: center;
+  align-self: center; /* 縦中央固定 */
   gap: 1px;
   text-align: center;
   padding: 0;
 }
 .drama-card.show-rank .rank-badge { display: flex; }
+/* ランクバッジ表示時はポスター左のpaddingを詰める */
+.drama-card.show-rank .card-header { padding-left: 4px; }
 .rank-crown { font-size: 11px; line-height: 1; }
 .rank-num { font-size: 14px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .rank-1 .rank-crown { color: #FFD700; }
@@ -2846,8 +2843,8 @@ function createCard(row) {
     <div class="card-checkbox-wrap">
       <input type="checkbox" onchange="toggleSelect(event, this.parentElement)" onclick="event.stopPropagation()">
     </div>
-    <div class="rank-badge"><span class="rank-crown"></span><span class="rank-num"></span></div>
-    <div class="card-header" onclick="toggleCard(this)" style="flex:1;padding-left:0;min-width:0;">
+    <div class="card-header" onclick="toggleCard(this)">
+      <div class="rank-badge"><span class="rank-crown"></span><span class="rank-num"></span></div>
       <div class="card-poster">${posterHtml}</div>
       <div class="card-header-info">
         <div class="card-title-row">

@@ -563,7 +563,15 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
   overflow: hidden;
   margin-bottom: 8px;
   transition: border-color 0.2s;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
+/* card-headerとrank-badgeが横並び、card-detailが下段全幅 */
+.drama-card .rank-badge { align-self: center; }
+.drama-card .card-checkbox-wrap { align-self: center; }
+.drama-card .card-header { flex: 1; min-width: 0; }
+.card-detail { width: 100%; }
 /* P02改善: 国別の左ボーダーアクセント */
 .drama-card[data-stripe="jp"] { border-left: 3px solid rgba(122,168,212,0.6); }
 .drama-card[data-stripe="kr"] { border-left: 3px solid rgba(201,152,136,0.6); }
@@ -1374,20 +1382,28 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 
 /* ===== ランキングバッジ ===== */
 .rank-badge {
-  width: 40px; flex-shrink: 0; display: none;
-  flex-direction: column; align-items: center; justify-content: center;
-  padding: 0; gap: 1px; text-align: center;
+  width: 36px;
+  min-width: 36px;
+  flex-shrink: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 1px;
+  text-align: center;
+  padding: 0;
 }
 .drama-card.show-rank .rank-badge { display: flex; }
-.rank-crown { font-size: 12px; line-height: 1; }
-.rank-num { font-size: 15px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.rank-crown { font-size: 11px; line-height: 1; }
+.rank-num { font-size: 14px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .rank-1 .rank-crown { color: #FFD700; }
 .rank-1 .rank-num   { color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,.35); }
 .rank-2 .rank-crown { color: #C0C0C0; }
 .rank-2 .rank-num   { color: #C0C0C0; }
 .rank-3 .rank-crown { color: #CD7F32; }
 .rank-3 .rank-num   { color: #CD7F32; }
-.rank-other .rank-num { color: #444; font-size: 13px; }
+.rank-other .rank-num { color: #444; font-size: 12px; }
 .drama-card.rank-gold   { background: linear-gradient(90deg, rgba(255,215,0,.05) 0%, var(--surface) 55%); border-color: rgba(255,215,0,.2) !important; }
 .drama-card.rank-silver { background: linear-gradient(90deg, rgba(192,192,192,.04) 0%, var(--surface) 55%); border-color: rgba(192,192,192,.15) !important; }
 .drama-card.rank-bronze { background: linear-gradient(90deg, rgba(205,127,50,.04) 0%, var(--surface) 55%); border-color: rgba(205,127,50,.15) !important; }
@@ -2830,8 +2846,8 @@ function createCard(row) {
     <div class="card-checkbox-wrap">
       <input type="checkbox" onchange="toggleSelect(event, this.parentElement)" onclick="event.stopPropagation()">
     </div>
-    <div class="card-header" onclick="toggleCard(this)">
-      <div class="rank-badge"><span class="rank-crown"></span><span class="rank-num"></span></div>
+    <div class="rank-badge"><span class="rank-crown"></span><span class="rank-num"></span></div>
+    <div class="card-header" onclick="toggleCard(this)" style="flex:1;padding-left:0;min-width:0;">
       <div class="card-poster">${posterHtml}</div>
       <div class="card-header-info">
         <div class="card-title-row">

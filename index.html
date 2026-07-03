@@ -566,7 +566,6 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 }
 /* rank-badge がない時はcard-headerが全幅 */
 .drama-card .card-header { flex: 1; min-width: 0; }
-.card-detail { width: 100%; }
 /* P02改善: 国別の左ボーダーアクセント */
 .drama-card[data-stripe="jp"] { border-left: 3px solid rgba(122,168,212,0.6); }
 .drama-card[data-stripe="kr"] { border-left: 3px solid rgba(201,152,136,0.6); }
@@ -3198,11 +3197,18 @@ function applyFiltersAndSort() {
   }
 
   const listEl = document.getElementById('drama-list');
-  listEl.innerHTML = '';
+
+  // display:none方式（DOMを作り直さず表示切替のみ）
+  allCards.forEach(card => { card.style.display = 'none'; card.style.order = ''; });
+
   if (visible.length === 0) {
-    listEl.innerHTML = '<div class="no-results">条件に合うドラマが見つかりませんでした。</div>';
+    let noRes = listEl.querySelector('.no-results');
+    if (!noRes) { noRes = document.createElement('div'); noRes.className = 'no-results'; noRes.textContent = '条件に合うドラマが見つかりませんでした。'; listEl.appendChild(noRes); }
+    noRes.style.display = 'block';
   } else {
-    visible.forEach(c => listEl.appendChild(c));
+    const noRes = listEl.querySelector('.no-results');
+    if (noRes) noRes.style.display = 'none';
+    visible.forEach((card, i) => { card.style.display = ''; card.style.order = i; });
   }
   // ランキングバッジ表示（評価順・気になる順のみ）
   const showRank = (currentSort === 'rating-desc' || currentSort === 'likes-desc');
@@ -3357,7 +3363,7 @@ async function loadDramaData() {
   const listEl = document.getElementById('drama-list');
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
+    const timer = setTimeout(() => controller.abort(), 20000); // スマホ回線対応で20秒に延長
     const res = await fetch(GAS_URL, { signal: controller.signal });
     clearTimeout(timer);
 

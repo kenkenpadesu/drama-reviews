@@ -3607,11 +3607,25 @@ async function fetchAndShowItems(result, idx) {
   const type   = isTV ? 'tv' : 'movie';
 
   try {
-    const detailRes = await fetch(
-      `https://api.themoviedb.org/3/${type}/${result.id}?language=ja-JP&append_to_response=credits`,
-      { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } }
-    );
+    // 詳細＋予告編を並列取得
+    const [detailRes, videoRes] = await Promise.all([
+      fetch(
+        `https://api.themoviedb.org/3/${type}/${result.id}?language=ja-JP&append_to_response=credits`,
+        { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } }
+      ),
+      fetch(
+        `https://api.themoviedb.org/3/${type}/${result.id}/videos?language=ja-JP`,
+        { headers: { Authorization: `Bearer ${TMDB_TOKEN}` } }
+      )
+    ]);
     const detail = await detailRes.json();
+    const videoData = await videoRes.json();
+
+    // 予告編URL取得（日本語優先→英語にフォールバック）
+    const videos = videoData.results || [];
+    const trailer = videos.find(v => v.type === 'Trailer' && v.site === 'YouTube')
+      || videos.find(v => v.site === 'YouTube');
+    const trailerUrl = trailer ? `https://www.youtube.com/watch?v=${trailer.key}` : '';
 
     const countryMap   = { JP:'日本', KR:'韓国', US:'アメリカ', GB:'イギリス', CN:'中国', TW:'台湾' };
     const tmdbGenreMap = { 18:'ヒューマン', 10749:'ロマンス', 35:'コメディ', 80:'サスペンス・ミステリー', 9648:'サスペンス・ミステリー', 10759:'アクション・復讐', 10765:'ファンタジー・SF', 99:'社会派' };
@@ -3631,6 +3645,7 @@ async function fetchAndShowItems(result, idx) {
       genre:      { label:'ジャンル',           id:null,                     val:genres.join('・') },
       cast:       { label:'キャスト（役名付き）', id:`${prefix}-cast`,        val:cast },
       image:      { label:'ポスター画像',       id:`${prefix}-image`,        val:result.poster_path?'https://image.tmdb.org/t/p/w500'+result.poster_path:'' },
+      trailer:    { label:'予告編URL',         id:`${prefix}-trailer`,      val:trailerUrl },
     };
     _tmdbPendingData = Object.fromEntries(Object.entries(_tmdbPendingData).filter(([,v])=>v.val));
 

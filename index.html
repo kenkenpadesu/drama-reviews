@@ -1534,6 +1534,74 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 @media (max-width: 639px) {
   #sticky-controls { padding: 5px 1rem; }
 }
+
+/* ===== プライバシーポリシーモーダル ===== */
+.privacy-overlay {
+  display: none; position: fixed; inset: 0; z-index: 9998;
+  background: rgba(0,0,0,.82); backdrop-filter: blur(6px);
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.privacy-overlay.open { display: flex; }
+.privacy-modal {
+  background: #111; border: 1px solid rgba(255,255,255,.1);
+  border-radius: 14px; width: 100%; max-width: 520px;
+  max-height: 88vh; display: flex; flex-direction: column;
+  overflow: hidden; animation: lbIn .22s ease;
+}
+.privacy-modal-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0;
+}
+.privacy-eyebrow {
+  font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+  color: #6b5d3f; margin-bottom: 5px;
+  display: flex; align-items: center; gap: 6px;
+}
+.privacy-eyebrow::before { content: ''; display: block; width: 14px; height: 1px; background: #6b5d3f; }
+.privacy-title { font-size: 16px; font-weight: 700; color: #f0ebe0; letter-spacing: -.01em; }
+.privacy-close {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+  color: #888; font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0; font-family: inherit;
+}
+.privacy-close:hover { background: rgba(201,168,76,.15); color: #c9a84c; }
+.privacy-body {
+  padding: 1.25rem 1.5rem; overflow-y: auto; flex: 1;
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+.privacy-section-title {
+  font-size: 11px; font-weight: 700; color: #c9a84c;
+  letter-spacing: .1em; text-transform: uppercase; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 6px;
+}
+.privacy-section-title::before { content: ''; display: block; width: 3px; height: 12px; background: #c9a84c; border-radius: 2px; }
+.privacy-text { font-size: 12px; color: #777; line-height: 1.8; }
+.privacy-text a { color: #c9a84c; text-decoration: none; }
+.privacy-text a:hover { text-decoration: underline; }
+.privacy-text strong { color: #aaa; }
+.privacy-divider { height: 1px; background: rgba(255,255,255,.05); }
+.privacy-modal-footer {
+  padding: .875rem 1.5rem; border-top: 1px solid rgba(255,255,255,.05);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+.privacy-date { font-size: 10px; color: #444; }
+.privacy-close-btn {
+  background: #c9a84c; color: #0a0a0a; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 700; padding: 7px 20px; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif; transition: background .15s;
+}
+.privacy-close-btn:hover { background: #dfc06a; }
+.footer-links { display: flex; gap: 1.25rem; align-items: center; justify-content: center; margin-bottom: .75rem; flex-wrap: wrap; }
+.footer-link-btn {
+  font-size: 11px; color: #555; background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans JP', sans-serif; letter-spacing: .04em; transition: color .15s;
+}
+.footer-link-btn:hover { color: #c9a84c; }
+.footer-link-sep { color: #2a2a2a; font-size: 10px; }
+
 .trailer-btn {
   display: inline-flex; align-items: center; gap: 5px;
   background: transparent; border: 1px solid rgba(255,0,0,.25);
@@ -2328,24 +2396,70 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: #333; border
 </div>
 
 <footer>
+  <div class="footer-links">
+    <button class="footer-link-btn" id="privacy-btn">プライバシーポリシー</button>
+    <span class="footer-link-sep">|</span>
+    <button class="footer-link-btn" id="usage-footer-btn">使い方</button>
+  </div>
   <p>&copy; <span id="year"></span> けんけんぱのドラマレビュー. All rights reserved.</p>
-  <!-- TMDB アトリビューション（利用規約上必須） -->
   <div style="margin-top:1.2rem; display:flex; align-items:center; justify-content:center; gap:10px;">
     <a href="https://www.themoviedb.org" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:10px; text-decoration:none; opacity:.45; transition:opacity .2s;" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='.45'">
-      <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 190.24 81.52" width="64" height="28" aria-label="The Movie Database">
-        <defs>
-          <linearGradient id="tmdb-lg" y1="40.76" x2="190.24" y2="40.76" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#90cea1"/>
-            <stop offset=".56" stop-color="#3cbec9"/>
-            <stop offset="1" stop-color="#00b3e5"/>
-          </linearGradient>
-        </defs>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190.24 81.52" width="64" height="28" aria-label="The Movie Database">
+        <defs><linearGradient id="tmdb-lg" y1="40.76" x2="190.24" y2="40.76" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#90cea1"/><stop offset=".56" stop-color="#3cbec9"/><stop offset="1" stop-color="#00b3e5"/></linearGradient></defs>
         <path fill="url(#tmdb-lg)" d="M105.67,36.06h66.9A17.67,17.67,0,0,0,190.24,18.4h0A17.67,17.67,0,0,0,172.57.73h-66.9A17.67,17.67,0,0,0,88,18.4h0A17.67,17.67,0,0,0,105.67,36.06Zm-88,45h76.9A17.67,17.67,0,0,0,112.24,63.4h0A17.67,17.67,0,0,0,94.57,45.73H17.67A17.67,17.67,0,0,0,0,63.4H0A17.67,17.67,0,0,0,17.67,81.06ZM10.41,35.42h7.8V6.92h10.1V0H.31v6.9h10.1Zm28.1,0h7.8V8.25h.1l9,27.15h6l9.3-27.15h.1V35.4h7.8V0H66.76l-8.2,23.1h-.1L50.31,0H38.51ZM152.43,55.67a15.07,15.07,0,0,0-4.52-5.52,18.57,18.57,0,0,0-6.68-3.08,33.54,33.54,0,0,0-8.07-1h-11.7v35.4h12.75a24.58,24.58,0,0,0,7.55-1.15A19.34,19.34,0,0,0,148.11,77a16.27,16.27,0,0,0,4.37-5.5,16.91,16.91,0,0,0,1.63-7.58A18.5,18.5,0,0,0,152.43,55.67ZM145,68.6A8.8,8.8,0,0,1,142.36,72a10.7,10.7,0,0,1-4,1.82,21.57,21.57,0,0,1-5,.55h-4.05v-21h4.6a17,17,0,0,1,4.67.63,11.66,11.66,0,0,1,3.88,1.87A9.14,9.14,0,0,1,145,59a9.87,9.87,0,0,1,1,4.52A11.89,11.89,0,0,1,145,68.6Zm44.63-.13a8,8,0,0,0-1.58-2.62A8.38,8.38,0,0,0,185.63,64a10.31,10.31,0,0,0-3.17-1v-.1a9.22,9.22,0,0,0,4.42-2.82,7.43,7.43,0,0,0,1.68-5,8.42,8.42,0,0,0-1.15-4.65,8.09,8.09,0,0,0-3-2.72,12.56,12.56,0,0,0-4.18-1.3,32.84,32.84,0,0,0-4.62-.33h-13.2v35.4h14.5a22.41,22.41,0,0,0,4.72-.5,13.53,13.53,0,0,0,4.28-1.65,9.42,9.42,0,0,0,3.1-3,8.52,8.52,0,0,0,1.2-4.68A9.39,9.39,0,0,0,189.66,68.47ZM170.21,52.72h5.3a10,10,0,0,1,1.85.18,6.18,6.18,0,0,1,1.7.57,3.39,3.39,0,0,1,1.22,1.13,3.22,3.22,0,0,1,.48,1.82,3.63,3.63,0,0,1-.43,1.8,3.4,3.4,0,0,1-1.12,1.2,4.92,4.92,0,0,1-1.58.65,7.51,7.51,0,0,1-1.77.2h-5.65Zm11.72,20a3.9,3.9,0,0,1-1.22,1.3,4.64,4.64,0,0,1-1.68.7,8.18,8.18,0,0,1-1.82.2h-7v-8h5.9a15.35,15.35,0,0,1,2,.15,8.47,8.47,0,0,1,2.05.55,4,4,0,0,1,1.57,1.18,3.11,3.11,0,0,1,.63,2A3.71,3.71,0,0,1,181.93,72.72Z"/>
       </svg>
       <span style="font-size:10px; color:#555; letter-spacing:.04em;">This product uses the TMDB API but is not endorsed or certified by TMDB.</span>
     </a>
   </div>
 </footer>
+
+<!-- プライバシーポリシーモーダル -->
+<div id="privacy-overlay" class="privacy-overlay" role="dialog" aria-modal="true">
+  <div class="privacy-modal">
+    <div class="privacy-modal-header">
+      <div>
+        <div class="privacy-eyebrow">privacy policy</div>
+        <div class="privacy-title">プライバシーポリシー</div>
+      </div>
+      <button class="privacy-close" id="privacy-close">✕</button>
+    </div>
+    <div class="privacy-body">
+      <div>
+        <div class="privacy-section-title">基本方針</div>
+        <div class="privacy-text">本サイト「けんけんぱのドラマレビュー」は、個人が運営するドラマの評価・記録サイトです。ユーザーの個人情報を収集・販売・第三者提供することはありません。</div>
+      </div>
+      <div class="privacy-divider"></div>
+      <div>
+        <div class="privacy-section-title">アクセス解析</div>
+        <div class="privacy-text">当サイトはアクセス状況を把握するため、Google LLC が提供する <strong>Google Analytics</strong> を使用しています。Cookieを使用してデータを収集しますが、個人を特定する情報は含まれません。<br><br><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google プライバシーポリシー →</a></div>
+      </div>
+      <div class="privacy-divider"></div>
+      <div>
+        <div class="privacy-section-title">Cookie / localStorage</div>
+        <div class="privacy-text">「気になる」設定・投票済み情報・フィルター設定などをブラウザに保存するためCookieおよびlocalStorageを使用しています。これらが外部に送信されることはありません。</div>
+      </div>
+      <div class="privacy-divider"></div>
+      <div>
+        <div class="privacy-section-title">みんなの評価・気になる</div>
+        <div class="privacy-text">ドラマへの投票（みんなの評価）および「気になる」登録は匿名で行われます。IPアドレスなどの個人情報は記録しません。</div>
+      </div>
+      <div class="privacy-divider"></div>
+      <div>
+        <div class="privacy-section-title">画像・データの出典</div>
+        <div class="privacy-text">ドラマのポスター画像および一部情報は <strong style="color:#01b4e4">The Movie Database（TMDB）</strong> のAPIを使用して取得しています。当サイトはTMDBによって承認または認定されたものではありません。<br><br><a href="https://www.themoviedb.org" target="_blank" rel="noopener">The Movie Database →</a></div>
+      </div>
+      <div class="privacy-divider"></div>
+      <div>
+        <div class="privacy-section-title">免責事項</div>
+        <div class="privacy-text">掲載しているドラマの評価・感想はすべて個人の主観によるものです。情報の正確性を保証するものではありません。</div>
+      </div>
+    </div>
+    <div class="privacy-modal-footer">
+      <div class="privacy-date">制定：2026年7月</div>
+      <button class="privacy-close-btn" id="privacy-close-btn">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <script>
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -3644,6 +3758,32 @@ const resultObserver = new MutationObserver(() => {
   if (stickyResultCount) stickyResultCount.textContent = origResultCount.textContent;
 });
 if (origResultCount) resultObserver.observe(origResultCount, { childList: true, characterData: true, subtree: true });
+
+// ===== プライバシーポリシーモーダル =====
+const privacyOverlay  = document.getElementById('privacy-overlay');
+const privacyBtn      = document.getElementById('privacy-btn');
+const privacyClose    = document.getElementById('privacy-close');
+const privacyCloseBtn = document.getElementById('privacy-close-btn');
+
+function openPrivacy() {
+  privacyOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closePrivacy() {
+  privacyOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+privacyBtn.addEventListener('click', openPrivacy);
+privacyClose.addEventListener('click', closePrivacy);
+privacyCloseBtn.addEventListener('click', closePrivacy);
+privacyOverlay.addEventListener('click', e => { if (e.target === privacyOverlay) closePrivacy(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && privacyOverlay.classList.contains('open')) closePrivacy();
+});
+
+// フッターの「使い方」ボタン
+document.getElementById('usage-footer-btn').addEventListener('click', openUsageModal);
 
 // ===== 使い方モーダル =====
 const usageOverlay  = document.getElementById('usage-overlay');

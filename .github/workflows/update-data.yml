@@ -1,0 +1,52 @@
+name: Update data.json
+
+# 実行タイミング
+on:
+  # 8時間おき（UTC基準。JST 0時/8時/16時 に対応するUTC 15/23/7時）
+  schedule:
+    - cron: '0 7,15,23 * * *'
+  # GitHubのActions画面から手動実行できるボタン
+  workflow_dispatch:
+
+# data.json をコミットするための書き込み権限
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      # 1) リポジトリを取得
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) GASからJSONを取得して data.json に保存
+      - name: Fetch data.json from GAS
+        run: |
+          echo "GASからデータを取得します..."
+          # -f: HTTPエラー時に失敗扱い / -sS: 進捗は出さずエラーは表示 / -L: リダイレクト追従
+          curl -fsSL "${{ secrets.GAS_URL }}" -o data.new.json
+
+          # 取得内容が正しいJSONか検証（壊れたデータで上書きしないための安全装置）
+          if ! python3 -c "import json,sys; json.load(open('data.new.json'))" 2>/dev/null; then
+            echo "::error::取得したデータが正しいJSONではありません。data.jsonは更新しません。"
+            cat data.new.json | head -c 500
+            exit 1
+          fi
+
+          mv data.new.json data.json
+          echo "data.json を更新しました。"
+
+      # 3) 変化があればコミット＆プッシュ（変化がなければ何もしない）
+      - name: Commit and push if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet data.json; then
+            echo "変更なし。コミットしません。"
+          else
+            git add data.json
+            git commit -m "chore: update data.json (auto)"
+            git push
+            echo "data.json をコミットしました。"
+          fi

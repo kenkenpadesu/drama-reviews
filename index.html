@@ -2829,7 +2829,7 @@ async function submitVote(btn) {
     if (!res.ok) throw new Error(`HTTP ${res.status}`); // ★【改善】HTTPエラーを明示的に処理
     const data = await res.json();
     if (data.success) {
-      markVoted(title); // ★【改善】投票済みをローカルに記録
+      markVoted(title);
       btn.textContent = '投票済み';
       section.classList.add('done');
       section.querySelectorAll('.vote-star-btn').forEach(b => b.disabled = true);
@@ -2837,6 +2837,9 @@ async function submitVote(btn) {
         `平均 ${data.avg.toFixed(1)} (${data.total}票)`;
       const card = section.closest('.drama-card');
       updateUserRatingDisplay(card, data.avg, data.total);
+      // ★ GTMイベント：投票
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'vote', drama_title: title, vote_score: score });
     } else {
       throw new Error(data.error || '投票失敗');
     }
@@ -3003,6 +3006,9 @@ function toggleCard(header) {
       detail.removeEventListener('transitionend', onEnd);
     });
     const card = header.closest('.drama-card');
+    // ★ GTMイベント：カード展開
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'card_expand', drama_title: card?.dataset.titleJp || '' });
     drawRadarChart(card);
     setTimeout(restoreVotes, 50);
   }
@@ -3634,6 +3640,10 @@ function extractYouTubeId(url) {
 function openTrailer(url, title) {
   const videoId = extractYouTubeId(url);
   if (!videoId) { alert('YouTube URLの形式が正しくありません'); return; }
+
+  // ★ GTMイベント：予告編再生
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'trailer_play', drama_title: title });
 
   trailerTitle.textContent = title;
   trailerYtLink.href = url;

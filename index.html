@@ -3225,9 +3225,11 @@ function createCard(row, idx) {
   const tags = genre.split(/[、,，]/).map(g=>g.trim()).filter(Boolean);
   const emoji = getEmoji(country);
 
-  const eagerImg = idx < 4; // 最初の4枚は先読みしてLCPを改善
+  const eagerImg = idx < 2; // 最初の2枚だけ先読み（本命のLCP画像に帯域を集中）
+  // 一覧カードは w342 で軽く配信（拡大時はライトボックス側で w500 へ昇格）
+  const cardImgUrl = imgUrl.replace(/\/w\d+\//, '/w342/');
   const posterHtml = imgUrl
-    ? `<img src="${esc(imgUrl)}" alt="${esc(title)}" ${eagerImg ? 'fetchpriority="high"' : 'loading="lazy"'} onclick="openLightbox(this.src,'${esc(title).replace(/'/g, '&#39;')}')" style="cursor:zoom-in" onerror="this.parentElement.innerHTML='<div class=\\'card-poster-placeholder\\'>${emoji}</div>'">`
+    ? `<img src="${esc(cardImgUrl)}" alt="${esc(title)}" width="100" height="100" ${eagerImg ? 'fetchpriority="high"' : 'loading="lazy"'} onclick="openLightbox(this.src,'${esc(title).replace(/'/g, '&#39;')}')" style="cursor:zoom-in" onerror="this.parentElement.innerHTML='<div class=\\'card-poster-placeholder\\'>${emoji}</div>'">`
     : `<div class="card-poster-placeholder">${emoji}</div>`;
 
   card.innerHTML = `
@@ -3542,12 +3544,12 @@ async function buildAndRenderDramas(data) {
   const dramas = data.dramas || [];
   const likes  = data.likes  || {};
 
-  listEl.innerHTML = '';
   allCards = []; // リセット（再読み込み時に重複しないよう）
   if (dramas.length === 0) {
     listEl.innerHTML = '<div class="no-results">レビューデータが見つかりませんでした。</div>';
     return false;
   }
+  // スケルトンはここでは消さない。実カードを作り終えてから一括差し替え（CLS防止）
 
   // カードをチャンク分割で生成（メインスレッドを小刻みに解放して TBT を下げる）
   const CHUNK = 6;
@@ -3566,6 +3568,7 @@ async function buildAndRenderDramas(data) {
     }
   }
 
+  listEl.innerHTML = ''; // スケルトンを消し、直後に実カードを追加（空白の瞬間を作らない）
   updateStats();
   buildCountryChips();
   applyFiltersAndSort();

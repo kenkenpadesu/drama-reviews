@@ -3508,71 +3508,99 @@ function showLoadError() {
 }
 
 async function loadDramaData() {
-  const listEl = document.getElementById('drama-list');
+  let data = null;
+  let fromSnapshot = false;
+
+  // 1) 静的スナップショット data.json を最優先で試す（高速表示）
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 20000); // スマホ回線対応で20秒に延長
-    const res = await fetch(GAS_URL, { signal: controller.signal });
-    clearTimeout(timer);
+    const r = await fetch('data.json', { cache: 'no-cache' });
+    if (r.ok) { data = await r.json(); fromSnapshot = true; }
+  } catch (e) { /* data.json が無ければ無視して GAS へ */ }
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const dramas = data.dramas || [];
-    const likes  = data.likes  || {};
+  // 2) スナップショットが無ければ従来どおり GAS から取得（フォールバック）
+  if (!data) {
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(GAS_URL, { signal: controller.signal });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = await res.json();
+    } catch (e) { showLoadError(); return; }
+  }
 
-    listEl.innerHTML = '';
-    allCards = []; // リセット（再読み込み時に重複しないよう）
-    if (dramas.length === 0) {
-      listEl.innerHTML = '<div class="no-results">レビューデータが見つかりませんでした。</div>';
-      return;
+  // 3) 描画（チャンク分割で TBT を低減）
+  const ok = await buildAndRenderDramas(data);
+  if (!ok) return;
+
+  // 4) スナップショット表示だった場合、裏で GAS から最新のいいね/投票を反映
+  if (fromSnapshot) { refreshCountsFromGAS(); }
+}
+
+async function buildAndRenderDramas(data) {
+  const listEl = document.getElementById('drama-list');
+  const dramas = data.dramas || [];
+  const likes  = data.likes  || {};
+
+  listEl.innerHTML = '';
+  allCards = []; // リセット（再読み込み時に重複しないよう）
+  if (dramas.length === 0) {
+    listEl.innerHTML = '<div class="no-results">レビューデータが見つかりませんでした。</div>';
+    return false;
+  }
+
+  // カードをチャンク分割で生成（メインスレッドを小刻みに解放して TBT を下げる）
+  const CHUNK = 6;
+  for (let i = 0; i < dramas.length; i++) {
+    const d = dramas[i];
+    const row = [
+      d.title, d.country, d.summary, d.genre,
+      d.cast, d.theme, d.station, d.year, d.day,
+      d.rating, d.scoreStory, d.scoreCast, d.scoreVisual, d.scoreMusic, d.scoreSat,
+      d.review, d.image, d.likes, d.episodeTime, d.rewatch,
+      d.v1, d.v2, d.v3, d.v4, d.v5, d.streaming, d.episodes, d.trailer,
+    ];
+    allCards.push(createCard(row, i));
+    if ((i + 1) % CHUNK === 0 && i + 1 < dramas.length) {
+      await new Promise(r => setTimeout(r, 0)); // メインスレッドを解放
     }
+  }
 
-    dramas.forEach((d, idx) => {
-      const row = [
-        d.title, d.country, d.summary, d.genre,
-        d.cast, d.theme, d.station, d.year, d.day,
-        d.rating, d.scoreStory, d.scoreCast, d.scoreVisual, d.scoreMusic, d.scoreSat,
-        d.review, d.image, d.likes, d.episodeTime, d.rewatch,
-        d.v1, d.v2, d.v3, d.v4, d.v5, d.streaming, d.episodes, d.trailer,
-      ];
-      const card = createCard(row, idx);
-      allCards.push(card);
-    });
+  updateStats();
+  buildCountryChips();
+  applyFiltersAndSort();
 
-    updateStats();
-    buildCountryChips();
-    applyFiltersAndSort();
-
-    // いいね数・投票済み状態を反映
-    document.querySelectorAll('.like-btn').forEach(btn => {
-      const title = btn.dataset.title;
-      const count = likes[title] || 0;
-      btn.querySelector('.like-count').textContent = count;
-      if (likedTitles.has(title)) {
-        btn.classList.add('liked');
-        btn.querySelector('.like-label').textContent = ' 気になる！設定済';
-      }
-    });
-
-    // データ更新日時を表示
-    if (data.lastUpdated) {
-      let display = data.lastUpdated;
-      if (String(display).includes('T')) {
-        const d = new Date(display);
-        display = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      }
-      document.getElementById('last-updated-data').textContent = display;
-    } else {
-      document.getElementById('last-updated-data').textContent = '—';
+  // いいね数・投票済み状態を反映
+  document.querySelectorAll('.like-btn').forEach(btn => {
+    const title = btn.dataset.title;
+    const count = likes[title] || 0;
+    btn.querySelector('.like-count').textContent = count;
+    if (likedTitles.has(title)) {
+      btn.classList.add('liked');
+      btn.querySelector('.like-label').textContent = ' 気になる！設定済';
     }
+  });
 
-    // 検索BOX
+  // データ更新日時を表示
+  if (data.lastUpdated) {
+    let display = data.lastUpdated;
+    if (String(display).includes('T')) {
+      const d = new Date(display);
+      display = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+    document.getElementById('last-updated-data').textContent = display;
+  } else {
+    document.getElementById('last-updated-data').textContent = '—';
+  }
+
+  // UI 初期化は一度だけ（再読み込み時のイベント二重登録を防止）
+  if (!window._uiInitDone) {
+    window._uiInitDone = true;
     const searchInput    = document.getElementById('search-input');
     const searchClearBtn = document.getElementById('search-clear-btn');
     if (searchInput) {
       searchInput.addEventListener('input', () => {
         applyFiltersAndSort();
-        // 文字が入っているときだけクリアボタンを表示
         if (searchClearBtn) {
           searchClearBtn.style.display = searchInput.value ? 'inline-block' : 'none';
         }
@@ -3586,16 +3614,48 @@ async function loadDramaData() {
         applyFiltersAndSort();
       });
     }
-
-    // ジャンルグリッド初期化（追加・編集フォーム）
     buildGenreGrid('f-genre-grid');
     buildGenreGrid('e-genre-grid');
     buildStreamingGrid('f-streaming-grid');
     buildStreamingGrid('e-streaming-grid');
-
-  } catch (e) {
-    showLoadError();
   }
+
+  return true;
+}
+
+// スナップショット表示後、裏で GAS から最新のいいね/投票数を取得して反映
+async function refreshCountsFromGAS() {
+  try {
+    const res = await fetch(GAS_URL);
+    if (!res.ok) return;
+    const data = await res.json();
+    const likes  = data.likes  || {};
+    const dramas = data.dramas || [];
+
+    // いいね数を更新
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      const title = btn.dataset.title;
+      if (title in likes) {
+        btn.querySelector('.like-count').textContent = likes[title];
+        const card = btn.closest('.drama-card');
+        if (card) card.dataset.likes = likes[title];
+      }
+    });
+
+    // 投票（みんなの評価）を更新
+    const byTitle = {};
+    dramas.forEach(d => { byTitle[d.title] = d; });
+    allCards.forEach(card => {
+      const d = byTitle[card.dataset.titleJp];
+      if (!d) return;
+      const v1 = parseInt(d.v1)||0, v2 = parseInt(d.v2)||0, v3 = parseInt(d.v3)||0, v4 = parseInt(d.v4)||0, v5 = parseInt(d.v5)||0;
+      const vTotal = v1+v2+v3+v4+v5;
+      const vAvg = vTotal > 0 ? Math.round((v1+v2*2+v3*3+v4*4+v5*5)/vTotal*10)/10 : 0;
+      card.dataset.vAvg = vAvg;
+      card.dataset.vTotal = vTotal;
+      if (vTotal > 0) updateUserRatingDisplay(card, vAvg, vTotal);
+    });
+  } catch (e) { /* 裏更新の失敗は無視（表示は既に完了している） */ }
 }
 
 // ===== ライトボックス =====

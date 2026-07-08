@@ -1831,3 +1831,24 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   transition: color 0.15s;
 }
 .mood-clear:hover { color: var(--text-sub); }
+
+/* ========== accessibility（skip link 等・アクセシビリティ用の追加） ========== */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: var(--z-trailer);
+  background: var(--gold);
+  color: var(--bg);
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top .15s ease;
+}
+.skip-link:focus {
+  top: 8px;
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}

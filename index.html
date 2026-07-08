@@ -1974,10 +1974,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         管理者ログイン
         <button class="modal-close" id="modal-close-pw">✕</button>
       </div>
-      <p>パスワードを入力してください</p>
+      <p>管理者トークンを入力してください</p>
       <div class="pw-input-wrap">
-        <input type="password" class="form-input" id="pw-input" placeholder="パスワード">
-        <button class="pw-enter" id="pw-enter">入力</button>
+        <input type="password" class="form-input" id="pw-input" placeholder="管理者トークン" autocomplete="off">
+        <button class="pw-enter" id="pw-enter">ログイン</button>
       </div>
       <div class="pw-error" id="pw-error"></div>
     </div>
@@ -2182,8 +2182,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="controls" style="gap:6px; align-items:center; width:100%; flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;">
     <button id="mood-toggle-btn" class="mood-toggle-btn" aria-expanded="false" aria-controls="mood-drawer" style="flex-shrink:0;">🎭 気分で選ぶ</button>
     <button id="filter-button" class="filter-button" style="flex-shrink:0;">🔽 フィルター</button>
+    <button id="admin-login-button" class="admin-button" style="flex-shrink:0;">🔑 管理者</button>
     <button id="admin-button" class="admin-button" style="flex-shrink:0;">＋ 追加</button>
     <button id="delete-mode-button" class="admin-button" style="flex-shrink:0;">🗑 削除</button>
+    <button id="admin-logout-button" class="admin-button" style="flex-shrink:0;">🔓 ログアウト</button>
     <span id="mood-active-tag" style="display:none; align-items:center; gap:4px; font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); color:#c9a84c; flex-shrink:0;">
       <span id="mood-active-label"></span>
       <button id="mood-clear-tag-btn" style="background:none;border:none;color:#c9a84c;cursor:pointer;font-size:13px;line-height:1;padding:0 0 0 2px;" aria-label="気分をクリア">✕</button>
@@ -2487,22 +2489,69 @@ document.getElementById('year').textContent = new Date().getFullYear();
   }
 })();
 
-// URLパラメーターが ?admin=<正しいPASS> のときだけ表示
-const ADMIN_HASH = 'ec1829d80064a29f33be190310a45cdf29350505e93cee5716e3f1aa48895e34';
-async function sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-}
+// ============================================================
+// 管理者認証（金庫トークン方式）
+//   合鍵はページ内に一切持たない。管理者が入力したトークンを
+//   GAS（スクリプトプロパティ ADMIN_TOKEN）が毎回サーバー側で照合する。
+//   入力方式：A案（初回1回入力→sessionStorageに一時保存→操作ごと再送・再検証）
+// ============================================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCjd6I5xO7Vt14YK9F5tEyvKaZanLDItX0-tb_mdckdN3jogVEIK2lB7wECD_SkUeL/exec';
+const TOKEN_KEY = 'dr_admin_token';
 const urlParams = new URLSearchParams(window.location.search);
-const _adminParam = urlParams.get('admin');
 let _adminUnlocked = false;
+let _adminToken = '';
+
+function setAdminToken(t) {
+  _adminToken = t;
+  try { sessionStorage.setItem(TOKEN_KEY, t); } catch (e) {}
+}
+function clearAdminToken() {
+  _adminToken = '';
+  try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
+}
+function _show(id, disp) { const el = document.getElementById(id); if (el) el.style.display = disp; }
+
+function unlockAdminUI() {
+  _adminUnlocked = true;
+  _show('admin-button', 'inline-block');
+  _show('delete-mode-button', 'inline-block');
+  _show('admin-logout-button', 'inline-block');
+  _show('admin-login-button', 'none');
+  document.getElementById('drama-list').classList.add('admin-mode');
+}
+function lockAdminUI() {
+  _adminUnlocked = false;
+  clearAdminToken();
+  _show('admin-button', 'none');
+  _show('delete-mode-button', 'none');
+  _show('admin-logout-button', 'none');
+  if (urlParams.has('admin')) _show('admin-login-button', 'inline-block');
+  const list = document.getElementById('drama-list');
+  list.classList.remove('admin-mode');
+  list.classList.remove('delete-mode');
+  const db = document.getElementById('delete-bar'); if (db) db.classList.remove('visible');
+}
+
+// GASにトークンの正否だけ問い合わせる（true=有効）
+async function verifyAdminToken(token) {
+  try {
+    const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ type: 'auth', token }) });
+    const data = await res.json();
+    return data && data.success === true;
+  } catch (e) { return false; }
+}
+
+// 起動時：?admin があればログインボタンを表示。sessionStorageに合鍵が残っていれば黙って再検証。
 (async () => {
-  if (_adminParam && await sha256(_adminParam) === ADMIN_HASH) {
-    _adminUnlocked = true;
-    document.getElementById('admin-button').style.display = 'inline-block';
-    document.getElementById('delete-mode-button').style.display = 'inline-block';
-    document.getElementById('drama-list').classList.add('admin-mode');
+  let cached = '';
+  try { cached = sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) {}
+  if (cached && await verifyAdminToken(cached)) {
+    setAdminToken(cached);
+    unlockAdminUI();
+    return;
   }
+  if (cached) clearAdminToken();          // 無効（ローテーション済み等）なら破棄
+  if (urlParams.has('admin')) _show('admin-login-button', 'inline-block');
 })();
 
 // 編集モーダル
@@ -2568,7 +2617,7 @@ document.getElementById('edit-form-submit').addEventListener('click', async () =
 
   const payload = {
     type: 'edit',
-    password: ADMIN_HASH,
+    token: _adminToken,
     originalTitle: document.getElementById('e-original-title').value,
     title,
     country:  document.getElementById('e-country').value,
@@ -2661,7 +2710,7 @@ document.getElementById('delete-exec-btn').addEventListener('click', async () =>
   try {
     const res = await fetch(GAS_URL, {
       method: 'POST',
-      body: JSON.stringify({ type: 'delete', password: ADMIN_HASH, titles }),
+      body: JSON.stringify({ type: 'delete', token: _adminToken, titles }),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -2682,26 +2731,33 @@ document.getElementById('delete-exec-btn').addEventListener('click', async () =>
   btn.textContent = '削除する';
 });
 
-// ★【改善】GAS_URLを定数として先頭付近に移動（本来はスクリプト先頭で定義すべきだが、
-// このファイル構成上ここで宣言。他のfetch呼び出しより必ず前になるよう配置）
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyCjd6I5xO7Vt14YK9F5tEyvKaZanLDItX0-tb_mdckdN3jogVEIK2lB7wECD_SkUeL/exec';
-
 // 管理者モーダル
 const modalOverlay = document.getElementById('modal-overlay');
 const pwScreen     = document.getElementById('pw-screen');
 const addFormScreen= document.getElementById('add-form-screen');
 
-function openModal() {
+// ログイン画面（トークン入力）を開く
+function openLoginModal() {
   pwScreen.style.display = 'block';
   addFormScreen.style.display = 'none';
   document.getElementById('pw-input').value = '';
   document.getElementById('pw-error').textContent = '';
   modalOverlay.classList.add('open');
 }
+// ＋追加：ログイン済みなら追加フォームへ直行、未ログインならログイン画面
+function openModal() {
+  if (!_adminUnlocked || !_adminToken) { openLoginModal(); return; }
+  pwScreen.style.display = 'none';
+  addFormScreen.style.display = 'block';
+  document.getElementById('form-msg').textContent = '';
+  modalOverlay.classList.add('open');
+}
 function closeModal() {
   modalOverlay.classList.remove('open');
 }
 
+document.getElementById('admin-login-button').addEventListener('click', openLoginModal);
+document.getElementById('admin-logout-button').addEventListener('click', () => { lockAdminUI(); closeModal(); });
 document.getElementById('admin-button').addEventListener('click', openModal);
 document.getElementById('modal-close-pw').addEventListener('click', closeModal);
 document.getElementById('modal-close-form').addEventListener('click', closeModal);
@@ -2710,16 +2766,24 @@ modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) clo
 document.getElementById('pw-enter').addEventListener('click', checkPassword);
 document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkPassword(); });
 
+// 入力トークンをGASに照合。OKなら sessionStorage に保存してUIを解錠。
 async function checkPassword() {
-  const val = document.getElementById('pw-input').value;
-  const hash = await sha256(val);
-  if (hash === ADMIN_HASH) {
-    pwScreen.style.display = 'none';
-    addFormScreen.style.display = 'block';
-    document.getElementById('form-msg').textContent = '';
+  const val = document.getElementById('pw-input').value.trim();
+  const errEl = document.getElementById('pw-error');
+  if (!val) { errEl.textContent = 'トークンを入力してください'; return; }
+  const btn = document.getElementById('pw-enter');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '確認中...';
+  errEl.textContent = '';
+  const ok = await verifyAdminToken(val);
+  if (ok) {
+    setAdminToken(val);
+    unlockAdminUI();
+    closeModal();
   } else {
-    document.getElementById('pw-error').textContent = 'パスワードが違います';
+    errEl.textContent = '合鍵が違います';
   }
+  btn.disabled = false; btn.textContent = orig;
 }
 
 document.getElementById('form-submit').addEventListener('click', async () => {
@@ -2741,7 +2805,7 @@ document.getElementById('form-submit').addEventListener('click', async () => {
   btn.textContent = '送信中...';
   const payload = {
     type: 'add',
-    password: ADMIN_HASH,
+    token: _adminToken,
     title,
     country:  document.getElementById('f-country').value,
     summary:  document.getElementById('f-summary').value.trim(),

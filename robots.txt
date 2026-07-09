@@ -1,0 +1,49 @@
+# けんけんぱのドラマレビュー — robots.txt
+# 方針：サイト全体をすべてのクローラーに許可（AI検索・回答エンジンも歓迎）
+
+User-agent: *
+Allow: /
+
+# --- AI / LLM 系クローラーを明示的に許可（AIの回答・引用に使われることを歓迎） ---
+# 検索・回答用
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+# 学習利用の可否を制御するもの（許可＝AIの学習にも使われてよい、の意味）
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://kenkenpa-drama.com/sitemap.xml

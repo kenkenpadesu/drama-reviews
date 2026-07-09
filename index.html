@@ -44,13 +44,27 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebSite",
-  "name": "けんけんぱのドラマレビュー",
-  "alternateName": "けんけんぱのドラマレビュー",
-  "url": "https://kenkenpa-drama.com/",
-  "description": "観たドラマを5項目で採点する個人レビュー・評価サイト。",
-  "inLanguage": "ja",
-  "author": { "@type": "Person", "name": "けんけんぱ" }
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://kenkenpa-drama.com/#kenkenpa",
+      "name": "けんけんぱ",
+      "url": "https://kenkenpa-drama.com/",
+      "description": "「けんけんぱのドラマレビュー」の運営者・レビュアー。観たドラマを5項目で採点している。"
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://kenkenpa-drama.com/#website",
+      "name": "けんけんぱのドラマレビュー",
+      "alternateName": "けんけんぱのドラマレビュー",
+      "url": "https://kenkenpa-drama.com/",
+      "description": "観たドラマを、ストーリー・キャスト・映像美・音楽・満足度の5項目で採点する個人レビュー・評価サイト。日本・韓国・アメリカのドラマを収録。",
+      "inLanguage": "ja",
+      "about": "テレビドラマのレビューと5項目評価",
+      "creator": { "@id": "https://kenkenpa-drama.com/#kenkenpa" },
+      "author": { "@id": "https://kenkenpa-drama.com/#kenkenpa" }
+    }
+  ]
 }
 </script>
 <!-- ===== ここまで追記 ===== -->

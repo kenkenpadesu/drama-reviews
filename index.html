@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+<script>(function(){try{var t=localStorage.getItem("kkp-theme");if(t==="light")document.documentElement.classList.add("light");}catch(e){}})();</script>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -102,6 +103,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button class="search-clear-btn" id="search-clear-btn" aria-label="クリア" style="display:none">✕</button>
       </div>
       <button id="usage-btn" class="usage-btn" aria-label="使い方" style="flex-shrink:0;">使い方</button>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="ダークモードと明るめモードを切り替え" title="表示モードを切り替え" style="flex-shrink:0;">
+        <span class="tt-track"><span class="tt-ico tt-ico-d" aria-hidden="true">🌙</span><span class="tt-ico tt-ico-l" aria-hidden="true">☀️</span><span class="tt-knob" aria-hidden="true"></span></span>
+      </button>
     </div>
   </div>
   <div class="site-header-bottom">
@@ -643,6 +647,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div style="display:flex; align-items:center; justify-content:space-between; padding-bottom:4px; border-bottom:0.5px solid rgba(255,255,255,.05); margin-bottom:2px;">
       <div style="font-size:12px; font-weight:700; color:#f0ebe0; letter-spacing:-.01em;">けんけんぱの<em style="color:#c9a84c;font-style:normal;">ドラマレビュー</em></div>
       <span id="sticky-result-count" style="font-size:10px;color:#444;white-space:nowrap;"></span>
+      <button class="theme-toggle tt-mini" onclick="toggleTheme()" aria-label="ダークモードと明るめモードを切り替え" title="表示モードを切り替え" style="margin-left:8px;">
+        <span class="tt-track"><span class="tt-ico tt-ico-d" aria-hidden="true">🌙</span><span class="tt-ico tt-ico-l" aria-hidden="true">☀️</span><span class="tt-knob" aria-hidden="true"></span></span>
+      </button>
     </div>
     <div class="sticky-row1">
       <button class="sticky-filter-btn" id="sticky-mood-btn">🎭 気分で選ぶ</button>
@@ -1669,6 +1676,7 @@ async function drawRadarChart(card) {
     parseInt(card.dataset.scoreMusic)  || 0,
     parseInt(card.dataset.scoreSat)    || 0,
   ];
+  var _rc = getRadarColors();
   canvas._chartInstance = new Chart(canvas, {
     type: 'radar',
     data: {
@@ -1676,10 +1684,10 @@ async function drawRadarChart(card) {
       datasets: [{
         data: scores,
         fill: true,
-        backgroundColor: 'rgba(201,168,76,0.18)',
-        borderColor: '#c9a84c',
+        backgroundColor: _rc.fill,
+        borderColor: _rc.line,
         borderWidth: 1.5,
-        pointBackgroundColor: '#c9a84c',
+        pointBackgroundColor: _rc.line,
         pointRadius: 3,
       }]
     },
@@ -1689,9 +1697,9 @@ async function drawRadarChart(card) {
         r: {
           min: 0, max: 5,
           ticks: { stepSize: 1, display: false, backdropColor: 'transparent' },
-          grid: { color: 'rgba(255,255,255,0.08)' },
-          angleLines: { color: 'rgba(255,255,255,0.08)' },
-          pointLabels: { color: '#666', font: { size: 9, family: "-apple-system, 'Hiragino Sans', 'Yu Gothic', Meiryo, sans-serif" } }
+          grid: { color: _rc.grid },
+          angleLines: { color: _rc.grid },
+          pointLabels: { color: _rc.label, font: { size: 9, family: "-apple-system, 'Hiragino Sans', 'Yu Gothic', Meiryo, sans-serif" } }
         }
       },
       plugins: { legend: { display: false } }
@@ -1699,6 +1707,22 @@ async function drawRadarChart(card) {
   });
 }
 
+function toggleTheme(){
+  var isLight = document.documentElement.classList.toggle("light");
+  try{ localStorage.setItem("kkp-theme", isLight ? "light" : "dark"); }catch(e){}
+  if (typeof drawAllRadarCharts === "function") drawAllRadarCharts();
+}
+function getRadarColors(){
+  var s = getComputedStyle(document.documentElement);
+  var light = document.documentElement.classList.contains("light");
+  var gold = (s.getPropertyValue("--gold")||"#c9a84c").trim();
+  return {
+    fill:  light ? "rgba(166,132,47,0.22)" : "rgba(201,168,76,0.18)",
+    line:  gold,
+    grid:  light ? "rgba(60,45,20,0.14)" : "rgba(255,255,255,0.08)",
+    label: light ? "#7a6f5c" : "#666"
+  };
+}
 function drawAllRadarCharts() {
   document.querySelectorAll('.card-detail.open').forEach(detail => {
     drawRadarChart(detail.closest('.drama-card'));

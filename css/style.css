@@ -71,14 +71,27 @@ textarea:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 2px;
 }
-html { scroll-behavior: smooth; }
+/* [FIX-1] html にも背景を明示。body だけに背景があると canvas への
+   「背景伝播」に依存し、横オーバーフローやラバーバンド領域で
+   塗り残しが出て下地の黒(#0a0a0a)が右端に見えていた。
+   [FIX-2] overflow-x は body ではなく html 側で clip する。
+   body の overflow はビューポートへ伝播し body 自身は
+   visible のままになるため、hidden が機能していなかった。 */
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg);
+  max-width: 100%;
+  overflow-x: clip;
+  overscroll-behavior-x: none;
+}
 body {
   font-family: var(--font-jp);
   background: var(--bg);
   color: var(--text-sub);
   min-height: 100vh;
   line-height: 1.7;
-  overflow-x: hidden;
+  max-width: 100%;
+  overflow-x: clip;   /* [FIX] hidden → clip（sticky を壊さない） */
 }
 .site-header {
   padding: 1.8rem 2rem 0;
@@ -445,21 +458,35 @@ body {
   cursor: pointer; white-space: nowrap;
 }
 .pw-error { color: #e05a7a; font-size: 12px; margin-top: 6px; }
+/* [FIX-5 本丸] 右端の黒帯の原因。
+   このパネルは .open の付け外しだけで制御され、閉じていても
+   常にレンダリングされている（display:none も visibility:hidden も無い）。
+   translateX(100%) で画面右外に待機しているが、
+   box-shadow: -8px 0 32px rgba(0,0,0,0.8) が左向き・ぼかし32pxのため、
+   影だけが画面内の右端に約30px幅・全画面高でにじみ出ていた。
+   ダークでは黒地に黒で見えず、ライトでのみ黒帯として露出する。
+   → 閉じている間は visibility:hidden で描画を止め、
+     影自体もテーマ変数化する。 */
 .filter-overlay {
   position: fixed;
   top: 0; right: 0;
   width: 320px;
   height: 100vh;
   background: var(--gray-750);
-  box-shadow: -8px 0 32px rgba(0,0,0,0.8);
   z-index: var(--z-dropdown);
   transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.77,0,0.175,1);
+  visibility: hidden;
+  transition: transform 0.4s cubic-bezier(0.77,0,0.175,1), visibility 0s linear 0.4s;
   padding: 3rem 2rem;
   overflow-y: auto;
   border-left: 1px solid var(--hair-06);
 }
-.filter-overlay.open { transform: translateX(0); }
+.filter-overlay.open {
+  transform: translateX(0);
+  visibility: visible;
+  box-shadow: -8px 0 32px var(--shadow-strong);
+  transition: transform 0.4s cubic-bezier(0.77,0,0.175,1), visibility 0s linear 0s;
+}
 
 /* ========== フィルター / 絞り込み ========== */
 .filter-close {
@@ -818,7 +845,7 @@ main { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 4rem; }
 .lightbox-img {
   width: 100%;
   border-radius: 10px;
-  box-shadow: 0 24px 64px rgba(0,0,0,.7);
+  box-shadow: 0 24px 64px var(--shadow-mid);   /* [FIX-5] テーマ変数化 */
   display: block;
 }
 .lightbox-title {
@@ -1460,7 +1487,7 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   align-items: center;
   justify-content: center;
   z-index: var(--z-back-to-top);
-  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  box-shadow: 0 4px 16px var(--shadow-soft);   /* [FIX-5] テーマ変数化 */
   opacity: 0;
   transform: translateY(12px);
   transition: opacity .25s, transform .25s;
@@ -1487,6 +1514,10 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   transform: translateY(-100%);
   transition: transform .25s ease;
   max-width: none;
+  /* [FIX-4] backdrop-filter がモバイルGPUで要素外を巻き込み、
+     縁に暗いフリンジを出すことへの対策 */
+  isolation: isolate;
+  will-change: transform;
 }
 #sticky-controls.visible { transform: translateY(0); }
 .sticky-inner {
@@ -1496,6 +1527,9 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   flex-direction: column;
   gap: 4px;
 }
+/* [FIX-3] 先頭チップ「すべて」が「べて」と欠ける問題。
+   アクティブなチップへの自動スクロールやスクロール位置の復元で
+   先頭が左に切れていた。scroll-padding で先頭に余白を確保する。 */
 .sticky-row1 {
   display: flex;
   gap: 6px;
@@ -1503,6 +1537,9 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
+  scroll-padding-inline-start: 1rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
 .sticky-row2 {
   display: flex;
@@ -1511,7 +1548,24 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
+  scroll-padding-inline-start: 1rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
+.sticky-row1 > *:first-child,
+.sticky-row2 > *:first-child {
+  scroll-snap-align: start;
+  margin-inline-start: 0;
+}
+/* [FIX-3b] index.html にインラインstyleで直書きされた横スクロール行
+   （国チップ行・ソート行・機能ボタン行）にも同じ対策を効かせるための
+   共通クラス。HTML側に class="hscroll" を追加して使う。 */
+.hscroll {
+  scroll-padding-inline-start: 1rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.hscroll > *:first-child { margin-inline-start: 0; }
 
 /* ========== フィルター / 絞り込み ========== */
 .sticky-chip {
@@ -2047,6 +2101,9 @@ footer { text-align: center; padding: 2rem; font-size: 12px; color: var(--gray-5
   --hair-12: rgba(255,255,255,0.12);
   --hair-15: rgba(255,255,255,0.15);
   --sticky-bg: rgba(10,10,10,.94);
+  --shadow-strong: rgba(0,0,0,0.8);
+  --shadow-mid: rgba(0,0,0,.7);
+  --shadow-soft: rgba(0,0,0,.5);
   --seal-bg: #14110a;   --seal-tx: #dfc06a;
   --seal-want-bg: #0c1015;
 }
@@ -2071,6 +2128,10 @@ html.light{
   --hair-10: rgba(60,45,20,0.14); --hair-12: rgba(60,45,20,0.16);
   --hair-15: rgba(60,45,20,0.20);
   --sticky-bg: rgba(247,242,232,.90);
+  /* [FIX-5] ライトでは黒シャドウを茶系の淡い影に翻訳 */
+  --shadow-strong: rgba(60,45,20,0.28);
+  --shadow-mid: rgba(60,45,20,0.22);
+  --shadow-soft: rgba(60,45,20,0.16);
   --seal-bg:#faf5e9; --seal-tx:#8a6c22; --seal-want-bg:#eef2f7;
 }
 /* 明るめ時の細かな上書き（直書きが残る箇所） */

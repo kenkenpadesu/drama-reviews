@@ -2310,6 +2310,16 @@ async function refreshCountsFromGAS() {
     const likes  = data.likes  || {};
     const dramas = data.dramas || [];
 
+    /* [FIX-C] 埋め込みスナップショット(local-data)が古いと、
+       スプレッドシートに追加した作品が永久に表示されない。
+       件数がズレていたら GAS の最新データで作り直す。 */
+    if (dramas.length && dramas.length !== allCards.length) {
+      console.warn('[kkp] スナップショットが古いため再描画します:',
+                   allCards.length, '→', dramas.length);
+      await buildAndRenderDramas(data);
+      return;
+    }
+
     // いいね数を更新
     document.querySelectorAll('.like-btn').forEach(btn => {
       const title = btn.dataset.title;

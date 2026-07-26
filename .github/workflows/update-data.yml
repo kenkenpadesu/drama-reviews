@@ -25,7 +25,11 @@ jobs:
         run: |
           echo "GASからデータを取得します..."
           # -f: HTTPエラー時に失敗扱い / -sS: 進捗は出さずエラーは表示 / -L: リダイレクト追従
-          curl -fsSL "${{ secrets.GAS_URL }}" -o data.new.json
+          # --retry 5           : 失敗したら最大5回まで再試行
+          # --retry-delay 10    : 再試行の間隔は10秒
+          # --retry-all-errors  : 403などのHTTPエラーも再試行の対象にする（GASの一時的な403対策）
+          curl -fsSL --retry 5 --retry-delay 10 --retry-all-errors \
+            "${{ secrets.GAS_URL }}" -o data.new.json
 
           # 取得内容が正しいJSONか検証（壊れたデータで上書きしないための安全装置）
           if ! python3 -c "import json,sys; json.load(open('data.new.json'))" 2>/dev/null; then

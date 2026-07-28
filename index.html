@@ -1868,6 +1868,7 @@ function createCard(row, idx) {
   card.dataset.station   = row[COL.station]  || '';
   card.dataset.year      = year;
   card.dataset.day       = row[COL.day]      || '';
+  card.dataset.sheetOrder = idx;   // [FIX-D] スプレッドシートの行順（0,1,2…）。同年内の並びに使う
   card.dataset.review    = review;
   card.dataset.image     = imgUrl;
   card.dataset.scoreStory   = scoreStory;
@@ -2006,8 +2007,10 @@ function applyFiltersAndSort() {
   });
 
   switch (currentSort) {
-    case 'year-desc':   visible.sort((a,b)=>parseInt(b.dataset.year)-parseInt(a.dataset.year)); break;
-    case 'year-asc':    visible.sort((a,b)=>parseInt(a.dataset.year)-parseInt(b.dataset.year)); break;
+    // [FIX-D] 新しい順：まず放送年の新しい順。同じ年なら「シートで下の行＝新しい」とみなし、行順の大きいものを上に。
+    case 'year-desc':   visible.sort((a,b)=>(parseInt(b.dataset.year)-parseInt(a.dataset.year)) || (parseInt(b.dataset.sheetOrder)-parseInt(a.dataset.sheetOrder))); break;
+    // 古い順：まず放送年の古い順。同じ年ならシートで上の行（行順の小さいもの）を上に。
+    case 'year-asc':    visible.sort((a,b)=>(parseInt(a.dataset.year)-parseInt(b.dataset.year)) || (parseInt(a.dataset.sheetOrder)-parseInt(b.dataset.sheetOrder))); break;
     case 'rating-desc': visible.sort((a,b)=>parseFloat(b.dataset.ratingDecimal||0)-parseFloat(a.dataset.ratingDecimal||0)); break;
     case 'likes-desc':  visible.sort((a,b)=>parseInt(b.dataset.likes||0)-parseInt(a.dataset.likes||0)); break;
     case 'title-asc':   visible.sort((a,b)=>a.dataset.titleJp.localeCompare(b.dataset.titleJp,'ja')); break;
